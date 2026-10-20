@@ -13,6 +13,7 @@ cd /workspace/SivirinIA
 bash scripts/install.sh
 npm run db:start
 npm run env:local
+npm run ocr:install
 # Em outro terminal, mantenha o worker em execução:
 npm run worker
 # Aplicação:
@@ -36,7 +37,7 @@ Esse comando verifica a aplicação, o catálogo via API SQL e o serviço Auth. 
 - Cadastro, login, logout, recuperação de senha e sessões em cookies HttpOnly.
 - Organizações, troca de workspace, perfis, convites por código vinculado ao e-mail confirmado, alteração de perfil e exclusão de organização pelo proprietário mediante confirmação do nome.
 - Agentes: criar, editar, excluir e selecionar fontes permitidas.
-- Importação de PDF com texto, DOCX, TXT, Markdown, CSV e HTML, até 10 MB/2 milhões de caracteres; hash, fragmentação e indexação textual em português.
+- Importação de PDF, DOCX, TXT, Markdown, CSV e HTML; OCR local opcional em português para PDF digitalizado/misto e imagens PNG/JPEG/DOCX. Até 10 MB e 5 páginas/imagens com OCR; detalhes em docs/OCR.md.
 - Perguntas com trechos reais, documento, página de PDF e versão; recusa quando não há evidência.
 - Histórico privado com múltiplas perguntas, feedback, relatórios CSV/PDF e filtro de período, indicadores observados, perguntas frequentes e sem resposta, uso das fontes e consumo.
 - Fontes com permissões por perfil, atualização/reindexação e versões de metadados. Novos arquivos/textos entram em fila durável e preservam original privado e conteúdo integral por versão. Downloads respeitam a ACL atual. Importações antigas e URLs síncronas podem ter somente metadados.
@@ -52,7 +53,7 @@ A cota de páginas usa o maior valor entre unidades de 3.000 caracteres indexado
 
 Sem chave/ativação, a interface mostra **busca documental sem geração por IA**. O adaptador OpenAI para embeddings e geração citada foi implementado e seus contratos foram testados com simulador somente nos testes. Nenhuma chamada paga ou validação real de modelo foi executada.
 
-Ativação futura autorizada: configurar AI_API_KEY, AI_CHAT_MODEL, opcionalmente AI_EMBEDDING_MODEL (compatível com dimensões=1536), tarifas atuais e AI_ENABLED=true. As tarifas desconhecidas permanecem nulas. Não habilitar sem autorização de despesas. Documentos já indexados precisam ser reindexados para ganhar embeddings. Veja docs/COSTS.md e docs/BLOCKERS.md.
+Ativação futura autorizada: configurar AI_API_KEY, AI_CHAT_MODEL, opcionalmente AI_EMBEDDING_MODEL (compatível com dimensões=1536), tarifas atuais e AI_ENABLED=true. Tarifas ausentes bloqueiam chamadas; limites de custo/tokens são verificados antes da rede. Não habilitar sem autorização de despesas. Documentos já indexados precisam ser reindexados para ganhar embeddings. Veja docs/COSTS.md e docs/BLOCKERS.md.
 
 O importador HTTPS foi implementado com proteção SSRF, DNS validado, IP fixado, TLS, robots.txt e limites. O DNS público direto desta nuvem retorna EAI_AGAIN; portanto, a importação de sites está **bloqueada nesta máquina**. Arquivos e texto funcionam independentemente. Não enfraquecer a validação de rede para contornar o bloqueio.
 
@@ -82,3 +83,5 @@ A aplicação usa os endpoints padrão de Supabase. Para um projeto gerenciado a
 Em produção: definir APP_URL com a origem HTTPS real e permiti-la nos callbacks do Auth; ativar confirmação de e-mail e SMTP; dimensionar o armazenamento privado, backups, monitoramento, limites financeiros e políticas de retenção; completar testes e revisões de segurança/LGPD. Callback não confia em host arbitrário nem no endereço interno de bind 0.0.0.0.
 
 Nenhum deploy público foi feito. Pagamentos, conectores, automações, WhatsApp, SSO e white label ainda precisam de implementação e validação, conforme o roadmap.
+
+Crawler de sites/sitemaps: CLI `npm run crawl -- URL --pages=10 --depth=2`, ainda sem integração/agendamento; ver docs/CRAWLER.md. Billing sandbox inclui ledger e contratos preparados, sem checkout ou recorrência conectados; ver docs/BILLING.md.
