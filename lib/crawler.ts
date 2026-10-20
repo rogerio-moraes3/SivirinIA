@@ -33,12 +33,24 @@ export function isPublicAddress(address: string) {
 }
 async function request(
   url: URL,
+  maxBytes = MAX_BYTES,
 ): Promise<{ status: number; body: string; location?: string; type: string }> {
-  const addresses = await lookup(url.hostname, { all: true }).catch(() => {
-    throw new Error(
-      "Não foi possível resolver o domínio com segurança neste ambiente. Envie o arquivo ou texto enquanto o DNS público estiver indisponível.",
-    );
-  });
+  let resolutionTimer: ReturnType<typeof setTimeout> | undefined;
+  const addresses = await Promise.race([
+    lookup(url.hostname, { all: true }),
+    new Promise<never>((_resolve, reject) => {
+      resolutionTimer = setTimeout(
+        () => reject(new Error("dns_timeout")),
+        5000,
+      );
+    }),
+  ])
+    .catch(() => {
+      throw new Error(
+        "Não foi possível resolver o domínio com segurança neste ambiente. Envie o arquivo ou texto enquanto o DNS público estiver indisponível.",
+      );
+    })
+    .finally(() => clearTimeout(resolutionTimer));
   if (!addresses.length || addresses.some((a) => !isPublicAddress(a.address)))
     throw new Error("O domínio resolve para uma rede não permitida.");
   const address = addresses[0];
@@ -51,7 +63,7 @@ async function request(
         family: address.family,
         headers: {
           "User-Agent": "SivirinIA/0.1 (authorized knowledge import)",
-          Accept: "text/html,text/plain",
+          Accept: "text/html,text/plain,application/xml,text/xml",
         },
         lookup: (_host, _options, cb) =>
           cb(null, address.address, address.family),
@@ -62,22 +74,29 @@ async function request(
         let size = 0;
         res.on("data", (part: Buffer) => {
           size += part.length;
-          if (size > MAX_BYTES) {
+          if (size > maxBytes) {
             res.destroy();
-            reject(new Error("Página excede 10 MB."));
+            reject(new Error("Página excede o limite de bytes permitido."));
           } else parts.push(part);
         });
-        res.on("end", () =>
+        res.on("end", () => {
+          clearTimeout(wallTimer);
           resolve({
             status: res.statusCode || 500,
             body: Buffer.concat(parts).toString("utf8"),
             location: res.headers.location,
             type: res.headers["content-type"] || "",
-          }),
-        );
+          });
+        });
         res.on("error", reject);
       },
     );
+    const wallTimer = setTimeout(
+      () => req.destroy(new Error("Tempo total de importação excedido.")),
+      15000,
+    );
+    wallTimer.unref();
+    req.on("close", () => clearTimeout(wallTimer));
     req.on("timeout", () =>
       req.destroy(new Error("Tempo de importação excedido.")),
     );
@@ -122,7 +141,62 @@ export async function importUrl(input: string) {
       $("title").first().text().trim().slice(0, 250) || url.hostname;
     const text = $("main,article").first().text() || $("body").text();
     if (!text.trim()) throw new Error("Página sem texto utilizável.");
-    return { title, pages: [{ text, page: null }], url: url.href };
+    const links = $("a[href]")
+      .toArray()
+      .slice(0, 1000)
+      .flatMap((element) => {
+        try {
+          const link = validatePublicUrl(
+            new URL($(element).attr("href") || "", url).href,
+          );
+          link.hash = "";
+          return link.origin === url.origin ? [link.href] : [];
+        } catch {
+          return [];
+        }
+      });
+    return {
+      title,
+      pages: [{ text, page: null }],
+      url: url.href,
+      links: [...new Set(links)],
+    };
   }
   throw new Error("Limite de redirecionamentos excedido.");
+}
+
+export async function importSitemap(input: string) {
+  const initial = validatePublicUrl(input);
+  let url = initial;
+  for (let redirects = 0; redirects <= 3; redirects++) {
+    const result = await request(url, 1024 * 1024);
+    if ([301, 302, 303, 307, 308].includes(result.status)) {
+      if (!result.location)
+        throw new Error("Sitemap com redirecionamento inválido.");
+      const next = validatePublicUrl(new URL(result.location, url).href);
+      if (next.origin !== initial.origin)
+        throw new Error("Sitemap redirecionou para outra origem.");
+      url = next;
+      continue;
+    }
+    if (result.status !== 200)
+      throw new Error(`Sitemap respondeu HTTP ${result.status}.`);
+    if (/<!DOCTYPE|<!ENTITY/i.test(result.body))
+      throw new Error("Sitemap com entidades XML não permitido.");
+    const $ = load(result.body, { xmlMode: true });
+    const isIndex = $("sitemapindex").length === 1;
+    if (!isIndex && $("urlset").length !== 1)
+      throw new Error("Sitemap XML inválido.");
+    const nodes = $(isIndex ? "sitemap > loc" : "url > loc").toArray();
+    if (nodes.length > 500) throw new Error("Sitemap excede 500 endereços.");
+    const urls = nodes.map((node) => {
+      const target = validatePublicUrl($(node).text().trim());
+      target.hash = "";
+      if (target.origin !== initial.origin)
+        throw new Error("Sitemap contém endereço de outra origem.");
+      return target.href;
+    });
+    return { isIndex, urls: [...new Set(urls)] };
+  }
+  throw new Error("Sitemap excedeu redirecionamentos.");
 }

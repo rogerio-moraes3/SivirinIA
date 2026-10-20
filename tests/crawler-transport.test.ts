@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const transport = vi.hoisted(() => ({ lookup: vi.fn(), get: vi.fn() }));
 vi.mock("node:dns/promises", () => ({ lookup: transport.lookup }));
 vi.mock("node:https", () => ({ default: { get: transport.get } }));
-import { importUrl } from "../lib/crawler";
+import { importUrl, importSitemap } from "../lib/crawler";
 beforeEach(() => {
   transport.lookup.mockReset();
   transport.get.mockReset();
@@ -62,4 +62,95 @@ describe("transporte do crawler — simulado somente em testes", () => {
     );
     expect(transport.get).toHaveBeenCalledTimes(1);
   });
+});
+
+function xmlResponse(body: string, status = 200, location?: string) {
+  transport.get.mockImplementation(
+    (
+      _url: URL,
+      _options: RequestOptions,
+      callback: (response: IncomingMessage) => void,
+    ) => {
+      const request = new EventEmitter() as ClientRequest;
+      request.destroy = vi.fn(() => request);
+      const response = new EventEmitter() as IncomingMessage;
+      response.statusCode = status;
+      response.headers = { "content-type": "application/xml", location };
+      queueMicrotask(() => {
+        callback(response);
+        response.emit("data", Buffer.from(body));
+        response.emit("end");
+      });
+      return request;
+    },
+  );
+}
+describe("sitemap XML sobre transporte simulado", () => {
+  it("lê URLs e índices de sitemap sem expandir entidades", async () => {
+    xmlResponse(
+      "<urlset><url><loc>https://docs.example.test/a</loc></url></urlset>",
+    );
+    expect(
+      await importSitemap("https://docs.example.test/sitemap.xml"),
+    ).toEqual({ isIndex: false, urls: ["https://docs.example.test/a"] });
+    xmlResponse(
+      "<sitemapindex><sitemap><loc>https://docs.example.test/part.xml</loc></sitemap></sitemapindex>",
+    );
+    expect(
+      (await importSitemap("https://docs.example.test/sitemap.xml")).isIndex,
+    ).toBe(true);
+  });
+  it("recusa referências a outra origem antes de qualquer acesso a ela", async () => {
+    xmlResponse(
+      "<urlset><url><loc>https://127.0.0.1/private</loc></url></urlset>",
+    );
+    await expect(
+      importSitemap("https://docs.example.test/sitemap.xml"),
+    ).rejects.toThrow("outra origem");
+    expect(transport.get).toHaveBeenCalledTimes(1);
+  });
+  it("recusa DTD/XXE sem carregar o recurso externo", async () => {
+    xmlResponse(
+      '<!DOCTYPE urlset [<!ENTITY x SYSTEM "file:///etc/passwd">]><urlset><url><loc>&x;</loc></url></urlset>',
+    );
+    await expect(
+      importSitemap("https://docs.example.test/sitemap.xml"),
+    ).rejects.toThrow("entidades XML");
+    expect(transport.get).toHaveBeenCalledTimes(1);
+  });
+  it("limita número de endereços e não retorna uma lista truncada como completa", async () => {
+    xmlResponse(
+      "<urlset>" +
+        Array.from(
+          { length: 501 },
+          (_, i) => "<url><loc>https://docs.example.test/" + i + "</loc></url>",
+        ).join("") +
+        "</urlset>",
+    );
+    await expect(
+      importSitemap("https://docs.example.test/sitemap.xml"),
+    ).rejects.toThrow("500 endereços");
+  });
+  it("recusa redirecionamento de sitemap para IP privado", async () => {
+    xmlResponse("", 302, "https://127.0.0.1/sitemap.xml");
+    await expect(
+      importSitemap("https://docs.example.test/sitemap.xml"),
+    ).rejects.toThrow("outra origem");
+    expect(transport.get).toHaveBeenCalledTimes(1);
+  });
+});
+
+it("encerra resolução DNS que excede o prazo sem fazer requisição HTTPS", async () => {
+  vi.useFakeTimers();
+  transport.lookup.mockReturnValue(new Promise(() => {}));
+  try {
+    const pending = expect(
+      importUrl("https://docs.example.test/a"),
+    ).rejects.toThrow("resolver o domínio com segurança");
+    await vi.advanceTimersByTimeAsync(5000);
+    await pending;
+    expect(transport.get).not.toHaveBeenCalled();
+  } finally {
+    vi.useRealTimers();
+  }
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { answerQuestion, embedTexts } from "../lib/ai";
 import type { Evidence } from "../lib/knowledge";
 const evidence: Evidence = {
@@ -11,6 +11,12 @@ const evidence: Evidence = {
   version: 1,
   score: 1,
 };
+beforeEach(() => {
+  vi.stubEnv("AI_INPUT_USD_PER_MILLION", "1");
+  vi.stubEnv("AI_OUTPUT_USD_PER_MILLION", "2");
+  vi.stubEnv("AI_EMBEDDING_USD_PER_MILLION", "1");
+  vi.stubEnv("AI_MAX_REQUEST_USD", "0.01");
+});
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
@@ -107,13 +113,11 @@ describe("adaptador de IA — provedor simulado somente em testes", () => {
     vi.stubEnv("AI_ENABLED", "true");
     vi.stubEnv("AI_API_KEY", "test-only");
     vi.stubEnv("AI_CHAT_MODEL", "test-model");
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        Response.json({
-          choices: [{ message: { content: "O prazo é sete dias [1]." } }],
-        }),
-      );
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        choices: [{ message: { content: "O prazo é sete dias [1]." } }],
+      }),
+    );
     vi.stubGlobal("fetch", fetch);
     await answerQuestion("E o prazo?", [evidence], "", [
       "descartar",
@@ -132,5 +136,47 @@ describe("adaptador de IA — provedor simulado somente em testes", () => {
     ]);
     expect(payload.messages).toHaveLength(2);
     expect(payload.messages[0].content).toContain("não constitui evidência");
+  });
+  it("bloqueia requisição sem tarifa ou acima do orçamento antes do fetch", async () => {
+    vi.stubEnv("AI_ENABLED", "true");
+    vi.stubEnv("AI_API_KEY", "test-only");
+    vi.stubEnv("AI_CHAT_MODEL", "test-model");
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    vi.stubEnv("AI_INPUT_USD_PER_MILLION", "");
+    await expect(answerQuestion("reembolso", [evidence], "")).rejects.toThrow(
+      "tarifa",
+    );
+    vi.stubEnv("AI_INPUT_USD_PER_MILLION", "100");
+    await expect(answerQuestion("reembolso", [evidence], "")).rejects.toThrow(
+      "Limite financeiro",
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("sinaliza possível divergência com ambas as fontes, sem chamar o modelo", async () => {
+    vi.stubEnv("AI_ENABLED", "true");
+    vi.stubEnv("AI_API_KEY", "test-only");
+    vi.stubEnv("AI_CHAT_MODEL", "test-model");
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const a = {
+      ...evidence,
+      content: "O prazo de cancelamento é de sete dias corridos.",
+    };
+    const b = {
+      ...evidence,
+      id: "d",
+      source_id: "t",
+      content: "O prazo de cancelamento é de trinta dias corridos.",
+    };
+    const result = await answerQuestion(
+      "Qual o prazo de cancelamento?",
+      [a, b],
+      "",
+    );
+    expect(result.text).toContain("Possíveis divergências");
+    expect(result.citations).toHaveLength(2);
+    expect(result.mode).toBe("extractive");
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

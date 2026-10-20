@@ -20,7 +20,9 @@
     "worker:setup": "node scripts/setup-worker.mjs",
     "worker": "node --conditions=react-server --import tsx scripts/document-worker.ts",
     "eval:rag": "node --conditions=react-server --import tsx scripts/evaluate-rag.ts",
-    "ocr:install": "node scripts/install-ocr.mjs"
+    "ocr:install": "node scripts/install-ocr.mjs",
+    "ai:check": "node scripts/check-ai.mjs",
+    "crawl": "node --conditions=react-server --import tsx scripts/crawl-site.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

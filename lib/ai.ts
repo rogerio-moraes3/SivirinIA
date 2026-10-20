@@ -1,3 +1,5 @@
+import { authorizeAiRequest, generationLimits } from "./ai-budget";
+import { numericEvidenceConflicts } from "./evidence-conflicts";
 import "server-only";
 import { z } from "zod";
 import { EnvHttpProxyAgent } from "undici";
@@ -11,6 +13,13 @@ import {
 const API = "https://api.openai.com/v1";
 const dispatcher = new EnvHttpProxyAgent();
 async function call(path: string, body: unknown) {
+  authorizeAiRequest(
+    path === "/embeddings" ? "embedding" : "generation",
+    body,
+    path === "/chat/completions"
+      ? (body as { max_completion_tokens: number }).max_completion_tokens
+      : 0,
+  );
   const options = {
     method: "POST",
     headers: {
@@ -63,13 +72,41 @@ export async function embedTexts(texts: string[]): Promise<number[][] | null> {
 export async function enrichChunks(chunks: Chunk[]) {
   if (!embeddingsEnabled()) return chunks;
   const started = Date.now();
-  // No unbounded concurrency: small sequential batches control provider load.
-  for (let i = 0; i < chunks.length; i += 32) {
-    if (Date.now() - started > 240_000)
-      throw new Error(
-        "Tempo de indexação excedido. Divida o documento em arquivos menores.",
-      );
-    const batch = chunks.slice(i, i + 32);
+  const batches: Chunk[][] = [];
+  let batch: Chunk[] = [];
+  let bytes = 0;
+  for (const chunk of chunks) {
+    const size = Buffer.byteLength(chunk.content, "utf8");
+    if (batch.length && (bytes + size > 8000 || batch.length >= 32)) {
+      batches.push(batch);
+      batch = [];
+      bytes = 0;
+    }
+    batch.push(chunk);
+    bytes += size;
+  }
+  if (batch.length) batches.push(batch);
+  const maximum = Number(process.env.AI_MAX_INGESTION_USD || "0.10");
+  if (!Number.isFinite(maximum) || maximum <= 0 || maximum > 10)
+    throw new Error("Limite financeiro de indexação inválido.");
+  // Validate all batches before the first billable request; no partial spending on an oversized document.
+  const upperCost = batches.reduce(
+    (total, b) =>
+      total +
+      authorizeAiRequest("embedding", {
+        model: process.env.AI_EMBEDDING_MODEL,
+        input: b.map((c) => c.content),
+        dimensions: 1536,
+      }).upperCost,
+    0,
+  );
+  if (upperCost > maximum)
+    throw new Error(
+      "Limite financeiro da indexação atingido antes de consultar o provedor.",
+    );
+  for (const batch of batches) {
+    if (Date.now() - started > 240000)
+      throw new Error("Tempo de indexação excedido. Divida o documento.");
     const vectors = await embedTexts(batch.map((c) => c.content));
     if (vectors)
       batch.forEach((c, index) => {
@@ -85,9 +122,22 @@ export async function answerQuestion(
   instructions: string,
   priorQuestions: string[] = [],
 ) {
-  const fallback = extractiveAnswer(evidence);
+  const conflicts = numericEvidenceConflicts(evidence);
+  const conflictSources = new Set(conflicts.flatMap((c) => c.sourceIds));
+  const orderedEvidence = conflicts.length
+    ? [
+        ...evidence.filter((e) => conflictSources.has(e.source_id)),
+        ...evidence.filter((e) => !conflictSources.has(e.source_id)),
+      ]
+    : evidence;
+  const fallback = extractiveAnswer(orderedEvidence);
+  if (conflicts.length)
+    fallback.text =
+      "Possíveis divergências numéricas entre fontes. Confira vigência e contexto; o sistema não escolheu uma regra automaticamente.\n\n" +
+      fallback.text;
   if (
     !evidence.length ||
+    conflicts.length > 0 ||
     process.env.AI_ENABLED !== "true" ||
     !process.env.AI_API_KEY ||
     !process.env.AI_CHAT_MODEL
@@ -102,7 +152,7 @@ export async function answerQuestion(
   const citations = citationsFrom(evidence);
   const result = await call("/chat/completions", {
     model: process.env.AI_CHAT_MODEL,
-    max_completion_tokens: 1000,
+    max_completion_tokens: generationLimits().output,
     messages: [
       {
         role: "system",
