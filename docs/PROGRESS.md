@@ -59,3 +59,7 @@ Validações: 123 unitários, 174 asserções SQL, lint, TypeScript, build pelo 
 Não há URL pública confirmada, vinculação Vercel ou credenciais de projeto Supabase de testes neste ambiente. Não houve deploy/criação de serviço. Para continuar: obter recursos de testes e autorização de publicação, aplicar migrations/configurar hook/SMTP/callbacks, iniciar worker e só então executar aceite remoto e fornecer o endereço real. Não anunciar integrações futuras como prontas. Conectores/WhatsApp/white label/enterprise ainda pendentes; crawler/billing preservam limitações anteriores.
 
 Imagem do worker construída e validada: PDF textual e digitalizado em container sem root/rede, filesystem somente leitura e limites reais; conexão ao banco local com papel restrito em execução `--once` passou. Readiness local passou após restaurar Next dev e worker.
+
+## Autorização de publicação recebida — 20/10/2026
+
+Usuário autorizou homologação sem gastos e sem lançamento comercial, confirmou contas Vercel/Supabase e ausência de host persistente. Não solicitar autorização novamente. Verificação atual: nenhum vínculo .vercel, variável de deploy/Supabase ou conector de deploy disponível; Git main preservado em b2fbe27. Requisito seguro VERCEL_TOKEN preparado no rascunho para api.vercel.com; ainda sem credencial aplicada/verificada. Passos de acesso e alternativas de worker registrados em STAGING_ACCESS.md. Pendentes: acesso autenticado, projeto separado, e-mails dos testadores e decisão viável de worker. Sem URL ou testes remotos novos.

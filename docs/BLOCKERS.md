@@ -43,3 +43,7 @@ Tentativas adicionais de rede nesta continuação: DNS-over-HTTPS Cloudflare e d
 Não foi encontrada URL pública de preview nem vínculo `.vercel`, credenciais de deploy ou projeto gerenciado de testes configurado. Publicação continua dependendo da autorização explícita pedida pelo usuário. Precisamos das contas/projeto de testes, host persistente do worker e e-mails autorizados; segredos devem ser definidos nos gerenciadores das plataformas, nunca no chat. Supabase gratuito/SMTP e Vercel precisam de verificação de limites/elegibilidade antes de criação. Não prometer servidor worker gratuito permanente.
 
 Leitura do schema oficial `openapi.vercel.sh/vercel.json` retornou HTTP 403; a validação final da configuração pela Vercel ainda está pendente. Build Docker inicialmente falhou por DNS do repositório Debian/proxy; resolver o proxy explicitamente e usar CA de build via secret preserva validação TLS e assinatura apt. Build e testes da imagem concluídos localmente, incluindo OCR sem rede/root e conexão restrita ao banco local. Ainda falta executar no host persistente com Supabase gerenciado.
+
+### Atualização após autorização
+
+Publicação de homologação está autorizada desde 20/10/2026; não falta mais aprovação de deploy. As contas existem, mas as sessões/acessos ainda não estão disponíveis neste ambiente. Usuário não tem servidor persistente: escolha de worker gratuito permanece pendente. Ver STAGING_ACCESS.md. Não confundir cadastro de requisito VERCEL_TOKEN no rascunho com token configurado ou conta conectada.

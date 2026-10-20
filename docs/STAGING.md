@@ -2,9 +2,9 @@
 
 Nenhuma URL pública foi criada ou confirmada nesta etapa. Não há projeto Vercel vinculado nem credenciais de Supabase gerenciado neste checkout. Não exponha o runtime local: ele usa autenticação de desenvolvimento. Não reutilize `.env.local` ou `.local/*.env` na nuvem.
 
-## O que precisa de autorização
+## Autorização e acessos
 
-Após revisar estes arquivos, autorizar **uma publicação de homologação**, conectar a conta Vercel e criar/selecionar um projeto Supabase exclusivamente de testes. Nenhuma contratação, upgrade ou IA paga está autorizada. Verificar a elegibilidade e os limites dos planos gratuitos no momento da criação; se algum plano exigir pagamento, parar. Vercel Hobby tem restrições de uso comercial: não pressupor que atende ao SaaS comercial. O worker exige uma máquina persistente existente; sem ela, escolher hospedagem e aprovar qualquer custo antes de contratar. Não há garantia de servidor gratuito permanente.
+**Publicação de homologação autorizada em 20/10/2026**, sem gastos nem lançamento comercial. O usuário já tem contas Vercel/Supabase. Faltam conectar os acessos, criar/selecionar o projeto exclusivo e escolher o host do worker; passos em [STAGING_ACCESS.md](STAGING_ACCESS.md). Não solicitar novamente a autorização já recebida. Nenhuma contratação, upgrade ou IA paga está autorizada. Verificar a elegibilidade e os limites dos planos gratuitos no momento da criação; se algum plano exigir pagamento, parar. Vercel Hobby tem restrições de uso comercial: não pressupor que atende ao SaaS comercial. O worker exige uma máquina persistente existente; sem ela, escolher hospedagem e aprovar qualquer custo antes de contratar. Não há garantia de servidor gratuito permanente.
 
 ## Arquitetura e limites
 
