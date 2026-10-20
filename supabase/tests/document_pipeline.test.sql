@@ -133,6 +133,11 @@ select public.delete_source('72000000-0000-0000-0000-000000000001',current_setti
 reset role;
 select pg_temp.assert_eq((select count(*)::int from public.document_snapshots where source_id=current_setting('test.source')::uuid),0,'Excluir fonte remove todos os originais e snapshots');
 select pg_temp.assert_eq((select count(*)::int from public.document_chunks where source_id=current_setting('test.source')::uuid),0,'Excluir fonte remove todos os índices');
+set local role authenticated;
+select pg_temp.assert_eq(public.knowledge_query('Qual o prazo de expedição?'),plainto_tsquery('portuguese','expedição'),'Pergunta natural não exige atributo prazo no documento');
+select pg_temp.assert_eq(public.knowledge_query('Como funciona a autenticação?'),plainto_tsquery('portuguese','autenticação'),'Verbo genérico não provoca recusa indevida');
+select pg_temp.assert_eq(public.knowledge_query('"prazo reembolso"'),websearch_to_tsquery('portuguese','"prazo reembolso"'),'Busca com frase explícita preserva sintaxe');
+select pg_temp.assert_eq(public.knowledge_query('prazo'),websearch_to_tsquery('portuguese','prazo'),'Consulta só com atributo não desaparece');
 set local role anon;
 select pg_temp.assert_throws($$select public.get_document_original('72000000-0000-0000-0000-000000000001',gen_random_uuid(),1)$$,'42501',null,'Anônimo não executa download de original');
 reset role;

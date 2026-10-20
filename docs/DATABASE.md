@@ -19,3 +19,5 @@ PostgreSQL local 15: a imagem completa de PG17 excedeu o disco de 32 GB. Apenas 
 Scripts/db-test.mjs usa psql no PostgreSQL real e helpers SECURITY INVOKER de asserção, mantendo o papel/claims sob teste. As suítes executam em transações revertidas; não há banco simulado. O schema sivirinia_internal armazena os hashes de migrations e não é exposto pelo PostgREST.
 
 Migrations 0091/010/011 adicionam schema privado, document_tasks, document_snapshots e document_inputs interno; plano inclui storage_limit_bytes. Fila diferente de ingestion_jobs (reserva legada de URL). Execução usa papel sivirinia_worker, sem permissões diretas em tabelas. RPCs privadas não são expostas pelo PostgREST. Conclusão é transacional e revalida ACL, versão esperada, quota e lease.
+
+Migrations 012/013/014: normalização de perguntas, funções de recuperação e índices incrementais. Comparação de vetores não depende do search_path; texto/página alterados invalidam o vetor antigo. Versões anteriores da migration foram preservadas e correções são incrementais, sem reset.

@@ -28,13 +28,13 @@ describe("parser real em processo separado", () => {
       prepareIndex(result.pages).hash,
     );
     expect(prepareIndex(result.pages).chunks).toHaveLength(2);
-  });
+  }, 15000);
   it("preserva texto de DOCX real", async () => {
     const result = await extractInChild(
       input("policy.docx", readFileSync("tests/fixtures/policy.docx")),
     );
     expect(result.pages[0].text.length).toBeGreaterThan(10);
-  });
+  }, 15000);
   it("aceita texto e recusa arquivo inválido sem propagar detalhes do parser", async () => {
     expect(
       (

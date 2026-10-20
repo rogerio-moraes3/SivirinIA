@@ -373,19 +373,32 @@ export async function askQuestion(
     conversationId = reservation.conversation_id;
     const vectors = await embedTexts([input.question]);
     const { data: rows, error: searchError } = await db.rpc(
-      "search_knowledge",
+      "search_agent_knowledge",
       {
         org,
+        agent: input.agent,
         query: input.question,
         query_embedding: vectors?.[0] || null,
         model_name: process.env.AI_EMBEDDING_MODEL || null,
       },
     );
     checked(searchError);
+    const { data: priorQuestions } = await db
+      .from("messages")
+      .select("content")
+      .eq("organization_id", org)
+      .eq("conversation_id", conversationId)
+      .eq("role", "user")
+      .order("sequence", { ascending: false })
+      .limit(5);
     const result = await answerQuestion(
       input.question,
       (rows || []) as Evidence[],
       agent.instructions,
+      (priorQuestions || [])
+        .slice(1)
+        .reverse()
+        .map((m) => m.content),
     );
     const { error: saveError } = await db.rpc("finish_answer", {
       message: messageId,

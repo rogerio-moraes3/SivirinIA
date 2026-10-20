@@ -30,6 +30,6 @@ jobs:
       - run: npm run db:start
       - run: npm run db:test
       - run: npm run env:local
-      - run: npm run build
+      - run: npm run eval:rag
       - run: npx playwright install --with-deps chromium
       - run: CHROMIUM_PATH=$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux64/chrome' -print -quit) npm run test:e2e

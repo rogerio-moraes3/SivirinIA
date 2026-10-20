@@ -45,14 +45,12 @@ describe("adaptador de IA — provedor simulado somente em testes", () => {
     vi.stubEnv("AI_CHAT_MODEL", "test-model");
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          Response.json({
-            choices: [{ message: { content: "O prazo é um ano [999]." } }],
-            usage: { prompt_tokens: 20, completion_tokens: 10 },
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        Response.json({
+          choices: [{ message: { content: "O prazo é um ano [999]." } }],
+          usage: { prompt_tokens: 20, completion_tokens: 10 },
+        }),
+      ),
     );
     const result = await answerQuestion("Reembolso?", [evidence], "");
     expect(result.mode).toBe("extractive");
@@ -67,14 +65,12 @@ describe("adaptador de IA — provedor simulado somente em testes", () => {
     vi.stubEnv("AI_OUTPUT_USD_PER_MILLION", "2");
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          Response.json({
-            choices: [{ message: { content: "O prazo é sete dias [1]." } }],
-            usage: { prompt_tokens: 100, completion_tokens: 20 },
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        Response.json({
+          choices: [{ message: { content: "O prazo é sete dias [1]." } }],
+          usage: { prompt_tokens: 100, completion_tokens: 20 },
+        }),
+      ),
     );
     const result = await answerQuestion("Reembolso?", [evidence], "");
     expect(result.mode).toBe("generative");
@@ -106,5 +102,35 @@ describe("adaptador de IA — provedor simulado somente em testes", () => {
         ),
     );
     await expect(embedTexts(["texto"])).rejects.toThrow();
+  });
+  it("envia somente perguntas anteriores limitadas como dados não confiáveis", async () => {
+    vi.stubEnv("AI_ENABLED", "true");
+    vi.stubEnv("AI_API_KEY", "test-only");
+    vi.stubEnv("AI_CHAT_MODEL", "test-model");
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({
+          choices: [{ message: { content: "O prazo é sete dias [1]." } }],
+        }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    await answerQuestion("E o prazo?", [evidence], "", [
+      "descartar",
+      "a".repeat(2000),
+      "b",
+      "c",
+      "d",
+    ]);
+    const payload = JSON.parse(fetch.mock.calls[0][1].body);
+    const data = JSON.parse(payload.messages[1].content);
+    expect(data.prior_user_questions).toEqual([
+      "a".repeat(1000),
+      "b",
+      "c",
+      "d",
+    ]);
+    expect(payload.messages).toHaveLength(2);
+    expect(payload.messages[0].content).toContain("não constitui evidência");
   });
 });

@@ -156,7 +156,7 @@ try {
   );
   succeeded = true;
   console.log(
-    "Inicialização limpa passou: bootstrap, Auth real, 9 migrations, cadastro, organização, agente, indexação e busca com JWT/RLS.",
+    "Inicialização limpa passou: bootstrap, Auth real, migrations atuais, cadastro, organização, agente, indexação e busca com JWT/RLS.",
   );
 } catch (error) {
   writeFileSync(
