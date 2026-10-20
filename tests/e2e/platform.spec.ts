@@ -93,6 +93,28 @@ test("cadastro → organização → agente → documento → pergunta citada �
   await expect(
     page.getByText("1 positivos, 0 negativos.", { exact: false }),
   ).toBeVisible();
+  const pdf = await page.request.get(
+    `/api/organizations/${base.split("/").pop()}/report`,
+  );
+  expect(pdf.ok()).toBe(true);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  expect(pdf.headers()["cache-control"]).toContain("no-store");
+  await page.getByLabel("Data inicial").fill("2099-01-01");
+  await page.getByLabel("Data final").fill("2099-01-31");
+  await page.getByRole("button", { name: "Filtrar período" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Os dados começam com as perguntas" }),
+  ).toBeVisible();
+  const invalid = await page.request.get(
+    `/api/organizations/${base.split("/").pop()}/report?from=2026-02-30`,
+  );
+  expect(invalid.status()).toBe(400);
+  const csv = await page.request.get(
+    `/api/organizations/${base.split("/").pop()}/export?from=2099-01-01&to=2099-01-31`,
+  );
+  expect(csv.ok()).toBe(true);
+  expect(await csv.text()).not.toContain("sete dias");
   await page.goto(base + "/chat");
   await page
     .getByLabel("Sua pergunta")
@@ -357,4 +379,98 @@ test("recuperação de senha por e-mail local e encerramento de sessão", async 
   await page.getByLabel("Senha", { exact: true }).fill(newPassword);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/workspace$/);
+});
+
+test("falha de PDF é recuperável e chat respeita as fontes permitidas do agente", async ({
+  page,
+  browser,
+}) => {
+  await page.goto("/signup");
+  await page
+    .getByLabel("E-mail profissional")
+    .fill(`pipeline-errors-${Date.now()}@example.test`);
+  await page
+    .getByLabel("Senha", { exact: true })
+    .fill("SivirinIA-error-password-2026");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Criar minha conta" }).click();
+  await expect(page).toHaveURL(/\/workspace$/);
+  await page.getByLabel("Nome da empresa").fill("Falhas e escopo teste E2E");
+  await page.getByRole("button", { name: "Criar espaço", exact: true }).click();
+  await expect(page).toHaveURL(/\/workspace\/[a-f0-9-]+$/);
+  const base = new URL(page.url()).pathname;
+  await page.goto(base + "/sources");
+  await page.getByLabel("Arquivo", { exact: true }).setInputFiles({
+    name: "corrompido.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("Este não é um PDF válido."),
+  });
+  await page
+    .getByRole("button", { name: "Importar documento", exact: true })
+    .click();
+  const failed = page
+    .getByTestId("document-task")
+    .filter({ hasText: "corrompido.pdf" });
+  await expect(failed).toContainText("Documento inválido ou sem texto");
+  await failed
+    .getByRole("button", { name: "Cancelar e descartar original pendente" })
+    .click();
+  await expect(failed).toContainText("Cancelada");
+  for (const [title, content] of [
+    ["Fonte autorizada", "O reembolso ocorre em sete dias."],
+    ["Fonte fora do agente", "O identificador confidencial é VIOLETA-8249."],
+  ]) {
+    await page.getByLabel("Título", { exact: true }).fill(title);
+    await page.getByLabel("Conteúdo", { exact: true }).fill(content);
+    await page.getByRole("button", { name: "Indexar conteúdo" }).click();
+    await expect(
+      page.getByRole("link", { name: title, exact: true }),
+    ).toBeVisible();
+  }
+  await page
+    .getByRole("link", { name: "Fonte autorizada", exact: true })
+    .click();
+  const download = await page
+    .getByRole("link", { name: "Baixar original v1", exact: true })
+    .getAttribute("href");
+  const visitor = await browser.newContext();
+  const denied = await visitor.request.get("http://127.0.0.1:3000" + download, {
+    maxRedirects: 0,
+  });
+  expect(denied.status()).toBe(307);
+  await visitor.close();
+  await page.goto(base + "/agents");
+  await page
+    .getByLabel("Nome", { exact: true })
+    .fill("Agente com escopo restrito");
+  await page.getByRole("button", { name: "Criar agente", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Agente criado");
+  await page.getByText("Fontes permitidas", { exact: true }).click();
+  await page
+    .getByLabel("Consultar todas as fontes que o usuário pode acessar")
+    .uncheck();
+  const binding = page.locator("form").filter({
+    has: page.getByRole("button", { name: "Salvar fontes", exact: true }),
+  });
+  await binding.getByLabel("Fonte autorizada", { exact: true }).check();
+  await page
+    .getByRole("button", { name: "Salvar fontes", exact: true })
+    .click();
+  await expect(binding.getByRole("status")).toContainText(
+    "Fontes do agente atualizadas",
+  );
+  await page.getByRole("link", { name: "Abrir conversa →" }).click();
+  await page
+    .getByLabel("Sua pergunta")
+    .fill("Qual o identificador confidencial?");
+  await page.getByRole("button", { name: "Perguntar à base" }).click();
+  await expect(page.locator("article.answer")).toContainText(
+    "Não encontrei uma resposta confiável",
+  );
+  await expect(page.locator("article.answer")).not.toContainText(
+    "VIOLETA-8249",
+  );
+  await page.getByLabel("Sua pergunta").fill("Qual o prazo de reembolso?");
+  await page.getByRole("button", { name: "Perguntar à base" }).click();
+  await expect(page.locator("article.answer")).toContainText("sete dias");
 });

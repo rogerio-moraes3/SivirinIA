@@ -20,3 +20,6 @@
 - Cache npm local do projeto em .cache/npm para operações de desenvolvimento; instalador pode reutilizar /tmp/sivirinia-npm nesta nuvem. Nenhuma alteração em HOME.
 
 - Worker possui papel SQL dedicado, sem service_role. Parser recebe somente bytes/nome/modo, sem segredos, em processo separado. Limites de heap e prazo não equivalem a sandbox de SO ou limite total de RSS.
+
+- Relatórios PDF são arquivos reais gerados localmente com pdf-lib, com escopo/limites e custos desconhecidos explícitos. Filtros temporais usam dias de São Paulo a partir de 2020 (sem horário de verão nesse intervalo).
+- Avaliação padrão sempre desliga IA no próprio processo; modo externo exige flags de autorização e configuração segura, não foi executado. O corpus é sintético e não comprova precisão em bases reais.

@@ -21,12 +21,12 @@
 
 ## Evidências
 
-69 testes unitários, 122 asserções SQL reais e 5 jornadas E2E passaram. A reinstalação com lockfile, o reinício de processos e a inicialização limpa em stack/volume isolados também passaram. Lint, TypeScript e build passaram. Detalhes e limites em TESTING.md. Nenhuma funcionalidade está declarada pronta para produção. Nenhum serviço pago ou deploy público ativado.
+79 testes unitários, 136 asserções SQL reais e 6 jornadas E2E foram aprovadas (cinco na execução geral, sexta em reexecução focada após correção de seletores de teste). A reinstalação com lockfile, o reinício de processos e a inicialização limpa em stack/volume isolados também passaram. Lint, TypeScript e build passaram. Detalhes e limites em TESTING.md. Nenhuma funcionalidade está declarada pronta para produção. Nenhum serviço pago ou deploy público ativado.
 
 ## Ainda não iniciado/concluído
 
 - OCR, crawler de sites/sitemaps, sincronização agendada, armazenamento de objetos escalável e embeddings no worker. Fila/worker e snapshots completos para novos arquivos/textos implementados.
-- Avaliação real de RAG em corpus português, reranking, contradições, geração com contexto de conversa, resumos e medição financeira completa dos embeddings.
+- Avaliação com provedor real e corpus empresarial, reranking, contradições, reformulação contextual da recuperação, resumos e medição financeira completa dos embeddings. Avaliação extrativa sintética de 12 casos passou; contrato de perguntas anteriores para geração foi implementado.
 - Pagamentos, assinaturas operacionais, webhooks reconciliados, upgrade/downgrade e emissão fiscal. Catálogo e quotas não equivalem a billing implementado.
 - API pública com chaves/escopos/OpenAPI; feedback e histórico do chat público; personalização avançada e canais.
 - Conectores internacionais/brasileiros, ferramentas/automações/MCP, WhatsApp, voz, SSO, white label, parceiros e painel do operador.
@@ -37,9 +37,18 @@
 1. Ler README, AGENTS, BLOCKERS e TESTING; usar este checkout existente.
 2. Iniciar o runtime mínimo com npm run db:start; preservar .local/runtime.env e o volume. Aplicação com npm run dev em uma única instância, ou npm start após build.
 3. Para testar geração real, obter credencial/modelos autorizados em configuração segura, autorização explícita de gastos e avaliar perguntas/citações. Não pedir segredo em chat nem ativar IA silenciosamente.
-4. Originais/fila implementados: executar npm run worker em processo próprio. Próximo trabalho: avaliação RAG em português e correção de recuperação/escopo dos agentes; depois OCR, atualizações incrementais e billing/conectores.
-5. CI está escrito; não houve push, execução no GitHub, publicação de site ou verificação de restauração em tarefa nova.
+4. Originais/fila implementados: executar npm run worker em processo próprio. Próximo trabalho: OCR opcional e evolução do crawler/sincronização segura; depois billing/conectores. Avaliação documental, escopo de agentes, manutenção incremental de trechos e exportação PDF por período já implementados.
+5. Commits locais enviados a origin/main sem force push. Consulta de GitHub Actions bloqueada por HTTP 403; CI remoto não verificado. Nenhuma publicação de site/snapshot nem restauração em tarefa nova.
 
 ## Etapa de ingestão assíncrona validada
 
 Fila durável com lease de 120 s, exclusão mútua por organização, backoff, três tentativas, cancelamento e recuperação após abandono. Parser separado: heap V8 de 512 MB, prazo de 60 s, limite de entrada/saída, sem credenciais herdadas. O limite de 192 MB foi insuficiente para o PDF real e foi corrigido. Papel de worker dedicado sem leitura direta de tabelas nem service_role. Limite de armazenamento por plano (100 MiB inicial), até 20 versões. Bytes e conteúdo histórico privado protegidos pela ACL atual. Não é isolamento de sistema operacional nem armazenamento de objetos ilimitado; veja DOCUMENT_PIPELINE.md.
+
+## Evoluções seguintes desta sessão
+
+- Recuperação corrigida: chat usa search_agent_knowledge com o agente da conversa, em vez de busca geral da organização. Perguntas naturais passam por normalização lexical explícita. Avaliação real de PostgreSQL em corpus sintético: 12/12, antes 8/12; sem provedor externo.
+- Atualizações preservam IDs/vetores dos fragmentos inalterados na mesma posição/página; alterados/removidos são substituídos/excluídos. Dez asserções SQL específicas passaram. Ainda não há alinhamento de trechos deslocados nem geração de embeddings no worker.
+- Inteligência ganhou filtro de datas de São Paulo, CSV com o mesmo período e PDF privado real, com perguntas, fontes, lacunas e consumo observado. Mantém o limite e escopo do histórico privado; fontes/revisão refletem o estado atual.
+- Fundação, fila e etapas validadas preservadas em commits; sincronização autorizada com origin/main sem force push. A consulta de CI remoto recebeu HTTP 403; não afirmar que CI passou.
+
+Próximo módulo executável: OCR opcional em português no worker com rasterização e limites de páginas/tempo; tesseract/pdftoppm existem, mas dados do idioma português ainda não estão instalados. Manter OCR explicitamente indisponível até implementar e testar. Depois, aprofundar crawler sem enfraquecer SSRF e evoluir billing conforme ROADMAP.

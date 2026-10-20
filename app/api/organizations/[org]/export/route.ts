@@ -1,12 +1,17 @@
+import { reportPeriod } from "@/lib/report-period";
 import { requireOrg } from "@/lib/access";
 import { csvCell } from "@/lib/csv";
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ org: string }> },
 ) {
   const { org } = await params;
   const { db } = await requireOrg(org);
-  const { data, error } = await db
+  const filters = new URL(request.url).searchParams;
+  const period = reportPeriod(filters.get("from"), filters.get("to"));
+  if (period.error)
+    return Response.json({ error: period.error }, { status: 400 });
+  const query = db
     .from("messages")
     .select(
       "created_at,role,content,mode,status,input_tokens,output_tokens,cost_usd",
@@ -14,6 +19,9 @@ export async function GET(
     .eq("organization_id", org)
     .order("created_at", { ascending: false })
     .limit(1000);
+  if (period.fromISO) query.gte("created_at", period.fromISO);
+  if (period.untilISO) query.lt("created_at", period.untilISO);
+  const { data, error } = await query;
   if (error)
     return Response.json({ error: "Falha ao exportar." }, { status: 500 });
   const columns = [

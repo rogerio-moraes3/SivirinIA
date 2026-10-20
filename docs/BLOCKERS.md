@@ -27,3 +27,11 @@ Não declarar conformidade integral LGPD, residência no Brasil ou precisão gar
 ## Módulos futuros
 
 Cobrança, conectores, WhatsApp, automações, API comercial e enterprise não estão concluídos aguardando somente uma chave: ainda exigem desenvolvimento, contratos oficiais e testes. Solicitar configurações específicas apenas quando o módulo estiver preparado para validação.
+
+## OCR e continuidade independente
+
+OCR ainda não implementado. Este ambiente possui tesseract e pdftoppm, mas somente os idiomas eng/osd estão instalados. Próximo módulo independente: rasterização limitada e OCR opcional em português no worker, com arquivo de idioma obtido/verificado de fonte oficial e testes reais; não apresentar OCR em português como disponível antes disso.
+
+## CI remoto
+
+Push para main funcionou. A leitura de execuções do GitHub Actions via gh/API retornou HTTP 403. Os resultados locais são verificáveis; não foi confirmado o resultado do CI remoto.

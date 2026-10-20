@@ -38,7 +38,7 @@ Esse comando verifica a aplicação, o catálogo via API SQL e o serviço Auth. 
 - Agentes: criar, editar, excluir e selecionar fontes permitidas.
 - Importação de PDF com texto, DOCX, TXT, Markdown, CSV e HTML, até 10 MB/2 milhões de caracteres; hash, fragmentação e indexação textual em português.
 - Perguntas com trechos reais, documento, página de PDF e versão; recusa quando não há evidência.
-- Histórico privado com múltiplas perguntas, feedback, CSV, indicadores observados, perguntas frequentes e sem resposta, uso das fontes e consumo.
+- Histórico privado com múltiplas perguntas, feedback, relatórios CSV/PDF e filtro de período, indicadores observados, perguntas frequentes e sem resposta, uso das fontes e consumo.
 - Fontes com permissões por perfil, atualização/reindexação e versões de metadados. Novos arquivos/textos entram em fila durável e preservam original privado e conteúdo integral por versão. Downloads respeitam a ACL atual. Importações antigas e URLs síncronas podem ter somente metadados.
 - Link compartilhável e widget Shadow DOM/iframe com seleção explícita de fontes públicas, confirmação do administrador, token rotacionável e revogação. Alterações de ACL ou rebaixamento do publicador revogam os links.
 - Planos configuráveis no banco e cotas transacionais. Nenhuma cobrança está ativa.
@@ -63,6 +63,7 @@ npm run lint
 npm run typecheck
 npm test
 npm run db:test
+npm run eval:rag
 npm run test:cold-start
 # Pare o servidor dev antes; este comando compila e inicia a versão de produção local.
 npm run test:e2e
@@ -72,7 +73,7 @@ Os testes de navegador usam /usr/bin/chromium; configure CHROMIUM_PATH em outra 
 
 O teste cold-start cria e remove somente uma stack/volume de teste isolados e valida bootstrap/Auth/migrations/busca do zero. O cache npm do projeto é gravável em .cache/npm, sem depender do diretório pessoal somente leitura desta nuvem.
 
-O workflow GitHub Actions está configurado; sua execução no GitHub ainda não foi realizada. Resultados locais e limitações estão em docs/TESTING.md, docs/PROGRESS.md e docs/BLOCKERS.md.
+O workflow GitHub Actions está configurado. O código foi enviado a origin/main; a consulta de execuções pela API do GitHub recebeu HTTP 403, portanto o estado do CI remoto não foi verificado. Resultados locais e limitações estão em docs/TESTING.md, docs/PROGRESS.md e docs/BLOCKERS.md.
 
 ## Supabase gerenciado e produção futura
 

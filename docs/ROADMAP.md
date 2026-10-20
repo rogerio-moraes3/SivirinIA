@@ -13,4 +13,6 @@ A especificação completa está em PRD.md. Progresso verificável em PROGRESS.m
 
 Cada módulo exige validação funcional e de isolamento antes de ser anunciado. Não avançar sobre falha crítica de segurança não corrigida. Não confundir os critérios comerciais dos PDFs com permissões de gastos ou publicação.
 
-Concluído nesta etapa: fila durável e parser separado, originais privados, snapshots integrais para novos arquivos/textos e download com ACL. OCR, embeddings no worker e atualização incremental ainda pendentes.
+Concluído nesta etapa: fila durável e parser separado, originais privados, snapshots integrais para novos arquivos/textos e download com ACL. OCR, embeddings no worker e sincronização agendada ainda pendentes.
+
+Também implementados: avaliação documental sintética em português, correção do escopo do agente, manutenção incremental por posição/página e relatórios PDF/CSV por período. Continuam pendentes avaliação de LLM real, OCR, semântica avançada e billing operacional.

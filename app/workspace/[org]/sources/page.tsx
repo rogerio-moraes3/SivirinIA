@@ -123,9 +123,7 @@ export default async function Sources({
               <strong>{t.title}</strong> · {taskLabels[t.status]} · Tentativa{" "}
               {t.attempts}/3
               {t.error_code && (
-                <p role="status">
-                  {errorLabels[t.error_code] || "Falha de processamento."}
-                </p>
+                <p>{errorLabels[t.error_code] || "Falha de processamento."}</p>
               )}
               {t.status === "complete" && t.source_id && (
                 <a href={`?source=${t.source_id}`}>Abrir fonte processada</a>

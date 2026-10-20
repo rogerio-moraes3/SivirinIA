@@ -1,43 +1,34 @@
 import { requireOrg } from "@/lib/access";
 import { PageTitle, Empty } from "@/components/ui";
-import { analyzeKnowledge, type AnswerRecord } from "@/lib/analytics";
+import { reportPeriod } from "@/lib/report-period";
+import { loadKnowledgeReport } from "@/lib/reports";
 export default async function Intelligence({
   params,
+  searchParams,
 }: {
   params: Promise<{ org: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const { org } = await params;
   const { db } = await requireOrg(org);
-  const [
-    { data: messages },
-    { data: questions },
-    { data: feedback },
-    { data: sources },
-  ] = await Promise.all([
-    db
-      .from("messages")
-      .select(
-        "id,reply_to,mode,status,created_at,citations,input_tokens,output_tokens,cost_usd,model",
-      )
-      .eq("organization_id", org)
-      .eq("role", "assistant")
-      .order("sequence", { ascending: false })
-      .limit(1000),
-    db
-      .from("messages")
-      .select("id,content")
-      .eq("organization_id", org)
-      .eq("role", "user")
-      .order("sequence", { ascending: false })
-      .limit(1000),
-    db.from("feedback").select("helpful").eq("organization_id", org),
-    db
-      .from("knowledge_source_health")
-      .select("id,title,updated_at,needs_review")
-      .eq("organization_id", org),
-  ]);
-  const rows = (messages || []) as AnswerRecord[];
-  const report = analyzeKnowledge(rows, questions || []);
+  const filters = await searchParams;
+  const period = reportPeriod(filters.from, filters.to);
+  if (period.error)
+    return (
+      <>
+        <PageTitle
+          eyebrow="RELATÓRIOS"
+          title="Período inválido"
+          description={period.error}
+        />
+        <a href={`/workspace/${org}/intelligence`}>Limpar filtros</a>
+      </>
+    );
+  const { rows, report, feedback, sources } = await loadKnowledgeReport(
+    db,
+    org,
+    period,
+  );
   const complete = rows.filter((m) => m.status === "complete"),
     absent = complete.filter((m) => m.mode === "abstention"),
     cited = complete.filter(
@@ -57,12 +48,33 @@ export default async function Intelligence({
         action={
           <a
             className="button secondary"
-            href={`/api/organizations/${org}/export`}
+            href={`/api/organizations/${org}/export${period.query}`}
           >
             Exportar CSV
           </a>
         }
       />
+      <form className="search-bar">
+        <label>
+          Data inicial
+          <input type="date" name="from" defaultValue={period.from} />
+        </label>
+        <label>
+          Data final
+          <input type="date" name="to" defaultValue={period.to} />
+        </label>
+        <button className="button secondary">Filtrar período</button>
+        <a href={`/workspace/${org}/intelligence`}>Limpar filtros</a>
+        <a
+          className="button secondary"
+          href={`/api/organizations/${org}/report${period.query}`}
+        >
+          Exportar PDF
+        </a>
+      </form>
+      <p className="muted">
+        {period.label}. Fontes e critério de revisão refletem o estado atual.
+      </p>
       <div className="grid four stats">
         {[
           ["Consultas registradas", rows.length],
