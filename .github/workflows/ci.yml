@@ -1,0 +1,35 @@
+name: quality
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  isolation-and-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: bash scripts/install.sh
+      - run: npm run db:start
+      - run: npm run db:test
+      - run: npm run env:local
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: CHROMIUM_PATH=$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux64/chrome' -print -quit) npm run test:e2e

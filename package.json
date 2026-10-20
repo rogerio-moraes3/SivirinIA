@@ -1,0 +1,53 @@
+{
+  "name": "sivirinia",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0 --port 3000",
+    "build": "next build --webpack",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:start": "node scripts/start-local.mjs",
+    "db:test": "node scripts/db-test.mjs",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "env:local": "node scripts/local-env.mjs",
+    "ready": "node scripts/readiness.mjs",
+    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\" \"tests/**/*.ts\" \"scripts/*.mjs\" \"*.{ts,json,mjs}\"",
+    "test:cold-start": "node scripts/check-cold-start.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.100.0",
+    "cheerio": "^1.2.0",
+    "fflate": "^0.8.3",
+    "ipaddr.js": "^2.3.0",
+    "lucide-react": "^0.577.0",
+    "next": "16.4.2",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.23.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "undici": "^7.30.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@next/env": "16.4.2",
+    "@playwright/test": "^1.58.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.4.2",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  },
+  "type": "module"
+}
