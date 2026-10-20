@@ -13,6 +13,8 @@ import {
 const API = "https://api.openai.com/v1";
 const dispatcher = new EnvHttpProxyAgent();
 async function call(path: string, body: unknown) {
+  if (process.env.APP_ENV === "staging")
+    throw new Error("IA paga desativada na homologação.");
   authorizeAiRequest(
     path === "/embeddings" ? "embedding" : "generation",
     body,

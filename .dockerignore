@@ -1,0 +1,11 @@
+**
+!package.json
+!package-lock.json
+!lib/
+!lib/**
+!scripts/
+!scripts/document-worker.ts
+!scripts/extract-document.ts
+!scripts/install-ocr.mjs
+!deploy/
+!deploy/worker.Dockerfile

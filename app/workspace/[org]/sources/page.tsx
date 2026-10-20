@@ -1,3 +1,4 @@
+import { remoteOcrConfigured, uploadLimitBytes } from "@/lib/upload-policy";
 import { ocrAvailable } from "@/lib/ocr";
 import { TaskRefresh } from "@/components/task-refresh";
 import { roleLabels } from "@/lib/roles";
@@ -26,7 +27,11 @@ export default async function Sources({
   const { org } = await params;
   const { q, source, kind, revision } = await searchParams;
   const { db, member } = await requireOrg(org);
-  const hasOcr = await ocrAvailable();
+  const hasOcr =
+    process.env.APP_ENV === "staging"
+      ? remoteOcrConfigured()
+      : await ocrAvailable();
+  const uploadMB = uploadLimitBytes() / 1024 / 1024;
   const write = ["owner", "admin", "editor"].includes(member.role);
   let query = db
     .from("knowledge_sources")
@@ -119,7 +124,8 @@ export default async function Sources({
           <h2>Processamento de documentos</h2>
           <p>
             Originais privados. Extração em segundo plano, com até três
-            tentativas. Limite de 10 MB por arquivo e 20 versões por fonte.
+            tentativas. Limite de {uploadMB} MB por arquivo e 20 versões por
+            fonte.
           </p>
           <TaskRefresh
             active={Boolean(
@@ -381,8 +387,8 @@ export default async function Sources({
           <section className="card">
             <h2>Enviar documento</h2>
             <p>
-              PDF, DOCX, TXT, Markdown, CSV, HTML e imagens PNG/JPEG. Até 10 MB.
-              OCR opcional em português, processado localmente.
+              PDF, DOCX, TXT, Markdown, CSV, HTML e imagens PNG/JPEG. Até{" "}
+              {uploadMB} MB. OCR opcional em português, processado localmente.
             </p>
             <Form
               action={ingestSource.bind(null, org)}

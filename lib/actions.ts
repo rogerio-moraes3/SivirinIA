@@ -6,7 +6,8 @@ import { headers } from "next/headers";
 import { supabase } from "./supabase/server";
 import { requireUser, requireOrg } from "./access";
 import { chunkPages, contentHash, MAX_CHARS, type Evidence } from "./knowledge";
-import { MAX_BYTES } from "./documents";
+import { uploadLimitBytes } from "./upload-policy";
+import { resolveAppOrigin } from "./origin";
 import { importUrl } from "./crawler";
 import { enrichChunks, embedTexts, answerQuestion } from "./ai";
 export type ActionState = { error?: string; success?: string };
@@ -102,7 +103,10 @@ export async function signup(
       error: "Use um e-mail válido e senha com pelo menos 12 caracteres.",
     };
   const db = await supabase();
-  const origin = (await headers()).get("origin");
+  const origin = resolveAppOrigin(
+    process.env.APP_URL,
+    (await headers()).get("host"),
+  );
   const { data, error } = await db.auth.signUp({
     ...parsed.data,
     options: origin
@@ -131,7 +135,7 @@ export async function recover(
   const email = z.email().safeParse(form.get("email"));
   if (!email.success) return { error: "Informe um e-mail válido." };
   const h = await headers();
-  const origin = h.get("origin");
+  const origin = resolveAppOrigin(process.env.APP_URL, h.get("host"));
   if (!origin) return { error: "Reabra esta página pelo navegador." };
   const db = await supabase();
   await db.auth.resetPasswordForEmail(email.data, {
@@ -221,8 +225,14 @@ export async function ingestSource(
       const titleInput = String(form.get("title") || "").trim();
       if (mode === "file") {
         const file = form.get("file");
-        if (!(file instanceof File) || !file.size || file.size > MAX_BYTES)
-          throw new Error("Arquivo inválido: limite de 10 MB.");
+        if (
+          !(file instanceof File) ||
+          !file.size ||
+          file.size > uploadLimitBytes()
+        )
+          throw new Error(
+            `Arquivo inválido: limite de ${uploadLimitBytes() / 1024 / 1024} MB.`,
+          );
         filename = file.name.replace(/[\\/\r\n]/g, "_").slice(0, 250);
         if (!/\.(pdf|docx|txt|md|csv|html|png|jpg|jpeg)$/i.test(filename))
           throw new Error("Formato de arquivo não suportado.");

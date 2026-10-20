@@ -22,7 +22,9 @@
     "eval:rag": "node --conditions=react-server --import tsx scripts/evaluate-rag.ts",
     "ocr:install": "node scripts/install-ocr.mjs",
     "ai:check": "node scripts/check-ai.mjs",
-    "crawl": "node --conditions=react-server --import tsx scripts/crawl-site.ts"
+    "crawl": "node --conditions=react-server --import tsx scripts/crawl-site.ts",
+    "staging:check": "node scripts/check-staging.mjs",
+    "staging:migrate": "node --import tsx scripts/migrate-staging.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

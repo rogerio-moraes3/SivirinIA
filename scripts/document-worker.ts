@@ -1,4 +1,5 @@
 import pg from "pg";
+import { workerConnection } from "../lib/worker-connection";
 import { existsSync, readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { setTimeout } from "node:timers/promises";
@@ -17,11 +18,7 @@ if (!connectionString)
   throw new Error(
     "Configure WORKER_DATABASE_URL de forma segura ou execute npm run worker:setup localmente.",
   );
-const db = new pg.Client({
-  connectionString,
-  application_name: "sivirinia-document-worker",
-  statement_timeout: 15000,
-});
+const db = new pg.Client(workerConnection(connectionString));
 await db.connect();
 const identity = await db.query("select current_user");
 if (identity.rows[0].current_user !== "sivirinia_worker") {

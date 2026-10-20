@@ -47,3 +47,15 @@ Nenhum deploy público, serviço pago ou cobrança real ativado. O produto ainda
 4. Billing: conectar checkout e recepção durável de notificações ao domínio sandbox após conferir documentação e configurar conta de teste por canal seguro. Não conceder plano real por pagamento sandbox.
 5. IA: npm run ai:check sem rede; npm run eval:rag é gratuito/documental. Modo --provider exige autorização explícita e configuração segura; ainda não foi executado.
 6. Commits preservam o histórico desde 21c2cd5 e são sincronizados com origin/main sem force push. Configuração reutilizável da nuvem foi atualizada para OCR/worker e limites de IA; não houve publicação de snapshot nem restauração em tarefa nova.
+
+## 2026-10-20 — prioridade homologação (base bc4270f preservada)
+
+Preparados `vercel.json` (deploy Git automático desligado, preflight obrigatório), exemplos separados em `deploy/`, worker Docker persistente sem root/portas e com limites, base Node fixada e modelo OCR verificado. Conexão remota do worker exige papel restrito, referência de testes, porta de sessão e TLS/certificado/hostname válidos. Migrations remotas têm comando manual com confirmação de alvo, hashes, lock e transações, sem reset/bootstrap local. Não executadas em Supabase gerenciado.
+
+Frontend: limite de upload 3 MiB em Vercel/staging, indicação de OCR remoto configurável (não heartbeat), banner de testes, callbacks com APP_URL canônica. Transporte de IA bloqueado em staging mesmo com flag ligada. Migration 018 cria lista privada de e-mails e hook Before User Created opcional; só restringe cadastros quando habilitado no Auth de testes. Nenhum dado de produção ou segredo versionado.
+
+Validações: 123 unitários, 174 asserções SQL, lint, TypeScript, build pelo runner E2E, sete jornadas Playwright e cold-start passaram localmente. Os 16 testes novos de homologação também passaram após revisão. Nenhuma chamada paga. Checklist de autorização/configuração e aceite remoto em STAGING.md.
+
+Não há URL pública confirmada, vinculação Vercel ou credenciais de projeto Supabase de testes neste ambiente. Não houve deploy/criação de serviço. Para continuar: obter recursos de testes e autorização de publicação, aplicar migrations/configurar hook/SMTP/callbacks, iniciar worker e só então executar aceite remoto e fornecer o endereço real. Não anunciar integrações futuras como prontas. Conectores/WhatsApp/white label/enterprise ainda pendentes; crawler/billing preservam limitações anteriores.
+
+Imagem do worker construída e validada: PDF textual e digitalizado em container sem root/rede, filesystem somente leitura e limites reais; conexão ao banco local com papel restrito em execução `--once` passou. Readiness local passou após restaurar Next dev e worker.

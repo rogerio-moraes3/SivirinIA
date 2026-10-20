@@ -37,3 +37,9 @@ Implementado e validado localmente com modelo português oficial. Outras máquin
 Push para main funcionou. A leitura de execuções do GitHub Actions via gh/API retornou HTTP 403. Os resultados locais são verificáveis; não foi confirmado o resultado do CI remoto.
 
 Tentativas adicionais de rede nesta continuação: DNS-over-HTTPS Cloudflare e documentação oficial Mercado Pago retornaram HTTP 403. Nenhuma proteção de DNS, TLS ou SSRF foi removida. Homologação externa de billing continua pendente.
+
+## Homologação online
+
+Não foi encontrada URL pública de preview nem vínculo `.vercel`, credenciais de deploy ou projeto gerenciado de testes configurado. Publicação continua dependendo da autorização explícita pedida pelo usuário. Precisamos das contas/projeto de testes, host persistente do worker e e-mails autorizados; segredos devem ser definidos nos gerenciadores das plataformas, nunca no chat. Supabase gratuito/SMTP e Vercel precisam de verificação de limites/elegibilidade antes de criação. Não prometer servidor worker gratuito permanente.
+
+Leitura do schema oficial `openapi.vercel.sh/vercel.json` retornou HTTP 403; a validação final da configuração pela Vercel ainda está pendente. Build Docker inicialmente falhou por DNS do repositório Debian/proxy; resolver o proxy explicitamente e usar CA de build via secret preserva validação TLS e assinatura apt. Build e testes da imagem concluídos localmente, incluindo OCR sem rede/root e conexão restrita ao banco local. Ainda falta executar no host persistente com Supabase gerenciado.

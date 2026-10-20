@@ -15,3 +15,7 @@ A configuração reutilizável da nuvem separa install_script (dependências/ima
 O rascunho de configuração da nuvem foi atualizado para iniciar o worker e consultar resultados em docs/TESTING.md, sem contagens fixas antigas. Permanece salvo para revisão/publicação privada do ambiente; não equivale a deploy público.
 
 OCR: instalação requer Tesseract/Poppler/util-linux; scripts/install-ocr.mjs verifica ferramentas e hash do modelo português. O instalador principal inclui essa etapa. Cache .cache/ocr não é segredo e pode ser reconstruído com npm run ocr:install; não baixar modelos durante tarefas. Rascunho da nuvem atualizado também para limites financeiros da IA; permanece sem publicação de snapshot.
+
+## Homologação remota
+
+Consulte [STAGING.md](STAGING.md) para Vercel, Supabase separado, worker Docker persistente, variáveis, autenticação fechada e checklist de testes. Preparação não equivale a publicação; não há URL pública confirmada ainda.

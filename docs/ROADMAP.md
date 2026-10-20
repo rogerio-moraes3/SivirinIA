@@ -18,3 +18,5 @@ Concluído nesta etapa: fila durável e parser separado, originais privados, sna
 Também implementados: avaliação documental sintética em português, correção do escopo do agente, manutenção incremental por posição/página e relatórios PDF/CSV por período. Continuam pendentes avaliação de LLM real, OCR, semântica avançada e billing operacional.
 
 Continuação atual: OCR em português e reprocessamento entregues; avaliação documental ampliada, orçamentos pré-chamada e heurística de divergências. Crawler BFS/sitemap/diff implementado no núcleo/CLI; integração à fila/painel/agendador pendente. Ledger sandbox e contratos Mercado Pago preparados; checkout/recorrência/webhook receptor continuam pendentes.
+
+Prioridade vigente: homologação segura de acordo com STAGING.md. Preparação de Vercel/Supabase separado/worker persistente implementada; recursos remotos, autorização de publicação e aceite no domínio real ainda pendentes. Testes locais não encerram esta fase. Depois do aceite, retomar sincronização de sites em fila, embeddings no worker e billing operacional, com custos sempre sujeitos a autorização.

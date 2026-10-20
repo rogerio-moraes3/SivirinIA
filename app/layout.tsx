@@ -19,6 +19,19 @@ export default function RootLayout({
         <a className="skip" href="#conteudo">
           Pular para conteúdo
         </a>
+        {process.env.APP_ENV === "staging" && (
+          <aside
+            style={{
+              background: "#10254a",
+              color: "#fff",
+              padding: "12px",
+              textAlign: "center",
+            }}
+          >
+            Homologação SivirinIA — use apenas dados de teste. Busca documental
+            com fontes; IA paga desativada.
+          </aside>
+        )}
         {children}
       </body>
     </html>

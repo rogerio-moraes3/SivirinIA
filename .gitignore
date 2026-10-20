@@ -12,3 +12,5 @@ supabase/.branches/
 next-env.d.ts
 .local/
 .cache/
+
+.vercel/

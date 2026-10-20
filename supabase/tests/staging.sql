@@ -1,0 +1,13 @@
+begin;
+insert into sivirinia_internal.staging_allowed_emails values ('teste@example.invalid');
+select pg_temp.assert_true(not has_function_privilege('anon','public.staging_before_user_created(jsonb)','execute'),'anon não executa hook');
+select pg_temp.assert_true(not has_function_privilege('authenticated','public.staging_before_user_created(jsonb)','execute'),'usuário não executa hook');
+select pg_temp.assert_true(not has_table_privilege('authenticated','sivirinia_internal.staging_allowed_emails','select'),'lista de teste privada');
+grant insert on pg_temp.test_assertions to supabase_auth_admin;
+set local role supabase_auth_admin;
+select pg_temp.assert_true(public.staging_before_user_created('{"user":{"email":"TESTE@example.invalid"}}') = '{}'::jsonb,'conta autorizada');
+select pg_temp.assert_true(public.staging_before_user_created('{"user":{"email":"outro@example.invalid"}}')->'error'->>'http_code' = '403','conta externa negada');
+select pg_temp.assert_true(public.staging_before_user_created('{}')->'error'->>'http_code' = '403','sem email negado');
+reset role;
+select 'ASSERTIONS=' || count(*) from pg_temp.test_assertions;
+rollback;

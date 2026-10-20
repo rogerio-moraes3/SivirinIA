@@ -74,3 +74,13 @@ Avaliação documental ampliada: 20/20 casos sintéticos, incluindo tabela de al
 Crawler: contratos de BFS/sitemap, XML/DTD/XXE, origem/redirecionamento, limites, diferença de versões e DNS que não responde. Transporte simulado somente nos testes. CLI público real falhou com zero páginas, sem substituir sucesso anterior nem autorizar exclusão. Não houve importação positiva pública.
 
 Billing: ledger em PostgreSQL real com RLS, preço do catálogo, idempotência, rejeição de valor incompatível, regressões de eventos e não ativação de plano por sandbox. Três testes locais de assinatura/adaptador; não são homologação Mercado Pago. Sem checkout/receptor de webhook conectado.
+
+## Preparação de homologação — 2026-10-20
+
+Passaram localmente: lint, TypeScript, 123 unitários em 15 arquivos; 174 asserções SQL (seis novas para hook/lista de testadores), cold-start com volume vazio e as sete jornadas Playwright juntas (3,1 min). O runner fez build e executou Next compilado com Auth/PostgreSQL/worker reais. Inclui layout móvel, cadastro/login, organizações/agentes, PDF, ACL de fontes, download privado, widget/revogação, recuperação de senha, relatórios e OCR via fila. Após padronizar o nome de variável pública com a aplicação e revisar TLS, lint/types e os 16 contratos novos passaram novamente.
+
+Falhas intermediárias corrigidas: tipo ProcessEnv exigia NODE_ENV nos testes; helper SQL não tinha permissão na tabela temporária do teste sob o papel Auth; primeira tentativa E2E encontrou o Next dev já em execução, encerrado após identificar o processo deste checkout. Não foram reduzidas proteções/assertions para passar testes.
+
+Sem evidência remota: nenhum deploy Vercel, migrations gerenciadas, SMTP remoto, navegador contra domínio público ou RLS contra Supabase gerenciado executados. O preflight valida configuração, não autentica a chave nem prova isolamento remoto. Ver checklist STAGING.md antes da publicação.
+
+Worker Docker: build passou com CA corporativa via BuildKit secret, sem gravar CA/segredos na imagem. `node scripts/check-worker-image.mjs` passou em PDF textual e PDF digitalizado real de testes, com rede desligada, usuário não root, filesystem somente leitura, RAM/PIDs limitados e páginas/conteúdo OCR verificados. A primeira execução detectou fontes de código com permissões 600 herdadas; a imagem agora define leitura nos arquivos não secretos antes de mudar para o usuário node. Comando real do container `npm run worker -- --once` conectou ao banco local com sivirinia_worker e encerrou corretamente. Isso ainda não comprova TLS/conectividade num Supabase gerenciado.
