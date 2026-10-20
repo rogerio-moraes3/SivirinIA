@@ -22,16 +22,18 @@ A imagem oficial foi recebida visualmente, mas não há arquivo binário baixáv
 
 O runtime Compose é de desenvolvimento, com captura local de e-mail e confirmação automática de contas para testes. Não expor como instalação comercial. Para hospedagem autorizada, usar infraestrutura/fornecedores revisados, APP_URL HTTPS correto, confirmação de e-mail, SMTP, Storage privado, workers isolados, backups/restore, monitoramento, limites financeiros, retenção/exclusão e revisão especializada.
 
-Não declarar conformidade integral LGPD, residência no Brasil ou precisão garantida da IA. Novos arquivos/textos preservam originais e versões integrais. Importações antigas/URLs não têm snapshot retroativo. Storage usa PostgreSQL privado limitado, ainda sem backend de objetos gerenciado, OCR ou varredura antimalware.
+Não declarar conformidade integral LGPD, residência no Brasil ou precisão garantida da IA. Novos arquivos/textos preservam originais e versões integrais. Importações antigas/URLs não têm snapshot retroativo. Storage usa PostgreSQL privado limitado, ainda sem backend de objetos gerenciado ou varredura antimalware.
 
 ## Módulos futuros
 
 Cobrança, conectores, WhatsApp, automações, API comercial e enterprise não estão concluídos aguardando somente uma chave: ainda exigem desenvolvimento, contratos oficiais e testes. Solicitar configurações específicas apenas quando o módulo estiver preparado para validação.
 
-## OCR e continuidade independente
+## OCR
 
-OCR ainda não implementado. Este ambiente possui tesseract e pdftoppm, mas somente os idiomas eng/osd estão instalados. Próximo módulo independente: rasterização limitada e OCR opcional em português no worker, com arquivo de idioma obtido/verificado de fonte oficial e testes reais; não apresentar OCR em português como disponível antes disso.
+Implementado e validado localmente com modelo português oficial. Outras máquinas precisam executar npm run ocr:install e instalar as ferramentas nativas; detalhes em OCR.md. Ainda faltam corpus adversarial amplo, reconstrução semântica de tabelas e sandbox completa.
 
 ## CI remoto
 
 Push para main funcionou. A leitura de execuções do GitHub Actions via gh/API retornou HTTP 403. Os resultados locais são verificáveis; não foi confirmado o resultado do CI remoto.
+
+Tentativas adicionais de rede nesta continuação: DNS-over-HTTPS Cloudflare e documentação oficial Mercado Pago retornaram HTTP 403. Nenhuma proteção de DNS, TLS ou SSRF foi removida. Homologação externa de billing continua pendente.

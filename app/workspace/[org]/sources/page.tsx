@@ -1,3 +1,4 @@
+import { ocrAvailable } from "@/lib/ocr";
 import { TaskRefresh } from "@/components/task-refresh";
 import { roleLabels } from "@/lib/roles";
 import { requireOrg } from "@/lib/access";
@@ -25,6 +26,7 @@ export default async function Sources({
   const { org } = await params;
   const { q, source, kind, revision } = await searchParams;
   const { db, member } = await requireOrg(org);
+  const hasOcr = await ocrAvailable();
   const write = ["owner", "admin", "editor"].includes(member.role);
   let query = db
     .from("knowledge_sources")
@@ -87,6 +89,15 @@ export default async function Sources({
   };
   const errorLabels: Record<string, string> = {
     invalid_document: "Documento inválido ou sem texto; verifique o arquivo.",
+    ocr_unavailable:
+      "OCR indisponível neste worker. Instale o idioma português.",
+    ocr_failed: "Falha no OCR; verifique se o arquivo pode ser lido.",
+    ocr_no_text: "OCR não encontrou texto legível.",
+    ocr_page_limit:
+      "OCR permite no máximo 5 páginas PDF ou imagens DOCX por tarefa.",
+    ocr_image_limit:
+      "Imagem excede 4.096 pixels por lado ou 12 milhões de pixels.",
+    ocr_required: "Marque OCR para processar PNG ou JPEG.",
     worker_timeout: "Tempo de processamento excedido.",
     quota_exceeded: "Limite de páginas, armazenamento ou versões atingido.",
     duplicate: "Este conteúdo já foi importado.",
@@ -159,13 +170,20 @@ export default async function Sources({
         />
         <select name="kind" defaultValue={kind || ""} aria-label="Formato">
           <option value="">Todos os formatos</option>
-          {["pdf", "docx", "text", "markdown", "csv", "html", "url"].map(
-            (k) => (
-              <option key={k} value={k}>
-                {k.toUpperCase()}
-              </option>
-            ),
-          )}
+          {[
+            "pdf",
+            "docx",
+            "text",
+            "markdown",
+            "csv",
+            "html",
+            "url",
+            "image",
+          ].map((k) => (
+            <option key={k} value={k}>
+              {k.toUpperCase()}
+            </option>
+          ))}
         </select>
         <button className="button secondary">Buscar</button>
       </form>
@@ -331,12 +349,17 @@ export default async function Sources({
                   Novo conteúdo
                   <textarea name="content" rows={5} maxLength={150000} />
                 </label>
+                <label className="check-label">
+                  <input type="checkbox" name="ocr" disabled={!hasOcr} />
+                  Usar OCR em português nesta atualização (arquivo; até 5
+                  páginas/imagens)
+                </label>
                 <label>
                   Novo arquivo
                   <input
                     type="file"
                     name="file"
-                    accept=".pdf,.docx,.txt,.md,.csv,.html"
+                    accept=".pdf,.docx,.txt,.md,.csv,.html,.png,.jpg,.jpeg"
                   />
                 </label>
                 <label>
@@ -357,7 +380,10 @@ export default async function Sources({
         <div className="grid two ingestion">
           <section className="card">
             <h2>Enviar documento</h2>
-            <p>PDF com texto, DOCX, TXT, Markdown, CSV ou HTML. Até 10 MB.</p>
+            <p>
+              PDF, DOCX, TXT, Markdown, CSV, HTML e imagens PNG/JPEG. Até 10 MB.
+              OCR opcional em português, processado localmente.
+            </p>
             <Form
               action={ingestSource.bind(null, org)}
               label="Importar documento"
@@ -367,13 +393,23 @@ export default async function Sources({
                 Título (opcional)
                 <input name="title" maxLength={250} />
               </label>
+              <label className="check-label">
+                <input type="checkbox" name="ocr" disabled={!hasOcr} />
+                Usar OCR em português (até 5 páginas/imagens)
+              </label>
+              {!hasOcr && (
+                <p>
+                  OCR indisponível: o operador precisa instalar as dependências
+                  locais.
+                </p>
+              )}
               <label>
                 Arquivo
                 <input
                   type="file"
                   name="file"
                   required
-                  accept=".pdf,.docx,.txt,.md,.csv,.html"
+                  accept=".pdf,.docx,.txt,.md,.csv,.html,.png,.jpg,.jpeg"
                 />
               </label>
             </Form>

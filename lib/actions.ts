@@ -215,6 +215,7 @@ export async function ingestSource(
       ? z.uuid().parse(form.get("source"))
       : null;
     if (mode !== "url") {
+      const ocrRequested = form.get("ocr") === "on";
       let bytes: Buffer;
       let filename: string;
       const titleInput = String(form.get("title") || "").trim();
@@ -223,7 +224,7 @@ export async function ingestSource(
         if (!(file instanceof File) || !file.size || file.size > MAX_BYTES)
           throw new Error("Arquivo inválido: limite de 10 MB.");
         filename = file.name.replace(/[\\/\r\n]/g, "_").slice(0, 250);
-        if (!/\.(pdf|docx|txt|md|csv|html)$/i.test(filename))
+        if (!/\.(pdf|docx|txt|md|csv|html|png|jpg|jpeg)$/i.test(filename))
           throw new Error("Formato de arquivo não suportado.");
         bytes = Buffer.from(await file.arrayBuffer());
       } else if (mode === "text") {
@@ -242,11 +243,12 @@ export async function ingestSource(
         .min(1)
         .max(250)
         .parse(titleInput || filename);
-      const { error } = await db.rpc("enqueue_document", {
+      const { error } = await db.rpc("enqueue_document_with_ocr", {
         org,
         source_title: title,
         filename,
         input_mode: mode,
+        ocr_requested: ocrRequested,
         input_base64: bytes.toString("base64"),
         source: sourceId,
       });

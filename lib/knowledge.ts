@@ -1,5 +1,15 @@
 import { createHash } from "node:crypto";
-export type Page = { text: string; page: number | null };
+export type Page = {
+  text: string;
+  page: number | null;
+  method?: "native" | "ocr" | "hybrid";
+  ocr?: {
+    engine: "tesseract";
+    language: "por";
+    confidence: number | null;
+    image?: number;
+  };
+};
 export type Chunk = {
   content: string;
   page: number | null;

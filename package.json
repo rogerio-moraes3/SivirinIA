@@ -19,7 +19,8 @@
     "test:cold-start": "node scripts/check-cold-start.mjs",
     "worker:setup": "node scripts/setup-worker.mjs",
     "worker": "node --conditions=react-server --import tsx scripts/document-worker.ts",
-    "eval:rag": "node --conditions=react-server --import tsx scripts/evaluate-rag.ts"
+    "eval:rag": "node --conditions=react-server --import tsx scripts/evaluate-rag.ts",
+    "ocr:install": "node scripts/install-ocr.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -474,3 +474,63 @@ test("falha de PDF é recuperável e chat respeita as fontes permitidas do agent
   await page.getByRole("button", { name: "Perguntar à base" }).click();
   await expect(page.locator("article.answer")).toContainText("sete dias");
 });
+
+test("OCR português: PDF de imagens passa pela fila, conserva páginas e original privado", async ({
+  page,
+}) => {
+  await page.goto("/signup");
+  await page
+    .getByLabel("E-mail profissional")
+    .fill(`ocr-${Date.now()}@example.test`);
+  await page
+    .getByLabel("Senha", { exact: true })
+    .fill("SivirinIA-ocr-test-password-2026");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Criar minha conta" }).click();
+  await expect(page).toHaveURL(/\/workspace$/);
+  await page.getByLabel("Nome da empresa").fill("OCR português E2E");
+  await page.getByRole("button", { name: "Criar espaço", exact: true }).click();
+  await expect(page).toHaveURL(/\/workspace\/[a-f0-9-]+$/);
+  const base = new URL(page.url()).pathname;
+  await page.goto(base + "/sources");
+  await page
+    .getByLabel("Usar OCR em português (até 5 páginas/imagens)", {
+      exact: true,
+    })
+    .check();
+  await page
+    .getByLabel("Arquivo", { exact: true })
+    .setInputFiles("tests/fixtures/scanned-ptbr.pdf");
+  await page
+    .getByRole("button", { name: "Importar documento", exact: true })
+    .click();
+  await page
+    .getByRole("link", { name: "scanned-ptbr.pdf", exact: true })
+    .click();
+  await expect(
+    page.getByText("Trecho 1 · página 1", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Trecho 2 · página 2", { exact: false }),
+  ).toBeVisible();
+  const original = await page
+    .getByRole("link", { name: "Baixar original v1", exact: true })
+    .getAttribute("href");
+  const bytes = await page.request.get(original!);
+  expect(await bytes.body()).toEqual(
+    (await import("node:fs")).readFileSync("tests/fixtures/scanned-ptbr.pdf"),
+  );
+  await page.getByRole("link", { name: "Ler versão 1", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "Conteúdo histórico" }),
+  ).toContainText("segundo fator");
+  await page.goto(base + "/agents");
+  await page.getByLabel("Nome", { exact: true }).fill("Especialista OCR");
+  await page.getByRole("button", { name: "Criar agente", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Agente criado");
+  await page.goto(base + "/chat");
+  await page.getByLabel("Sua pergunta").fill("Qual o prazo de reembolso?");
+  await page.getByRole("button", { name: "Perguntar à base" }).click();
+  await expect(page.locator("article.answer")).toContainText("sete dias");
+  await expect(page.locator("article.answer")).toContainText("página 1");
+});
