@@ -84,3 +84,13 @@ Falhas intermediárias corrigidas: tipo ProcessEnv exigia NODE_ENV nos testes; h
 Sem evidência remota: nenhum deploy Vercel, migrations gerenciadas, SMTP remoto, navegador contra domínio público ou RLS contra Supabase gerenciado executados. O preflight valida configuração, não autentica a chave nem prova isolamento remoto. Ver checklist STAGING.md antes da publicação.
 
 Worker Docker: build passou com CA corporativa via BuildKit secret, sem gravar CA/segredos na imagem. `node scripts/check-worker-image.mjs` passou em PDF textual e PDF digitalizado real de testes, com rede desligada, usuário não root, filesystem somente leitura, RAM/PIDs limitados e páginas/conteúdo OCR verificados. A primeira execução detectou fontes de código com permissões 600 herdadas; a imagem agora define leitura nos arquivos não secretos antes de mudar para o usuário node. Comando real do container `npm run worker -- --once` conectou ao banco local com sivirinia_worker e encerrou corretamente. Isso ainda não comprova TLS/conectividade num Supabase gerenciado.
+
+## Preparação Oracle/ARM — 20/10/2026
+
+Registro Docker respondeu com índice OCI do digest fixado incluindo linux/amd64 e linux/arm64/v8. Inspeção do lockfile encontrou canvas GNU e esbuild Linux ARM64. É evidência de artefatos compatíveis, não teste de runtime ARM.
+
+`python3 scripts/check-worker-vm.py` passou na arquitetura x64 nativa com a imagem real: PDFs textual e digitalizado, OCR por, páginas físicas e conteúdo esperado; sem rede/root, com filesystem somente leitura e limites de RAM/PIDs. A nova ferramenta não requer Node no host Ubuntu, somente Docker/Python. Não houve instalação de emulador privilegiado.
+
+`docker compose config --quiet` passou com arquivo local restrito indicado por WORKER_ENV_FILE, sem imprimir segredos; Prettier analisou YAML, Python compilou sintaxe e `sh -n` analisou regra metadata. O formatter detectou estilo no Compose, corrigido sem remover limites. A verificação systemd no host atual **não passou** por ausência de docker.service e /usr/bin/docker (o Docker deste ambiente usa outro caminho/gerenciamento). Cloud-init não foi inicializado numa VM e a regra de firewall não foi aplicada neste host; validar ambos no Ubuntu destino. Não afirmar boot, firewall, reinício da VM ou ARM como testados.
+
+Consultas às páginas oficiais Oracle e Google não chegaram aos servidores: proxy respondeu 403 ao CONNECT. Nenhum preço/capacidade regional atualizado confirmado e nenhum recurso remoto provisionado. Código funcional da aplicação não mudou nesta etapa; não repetimos as suítes da plataforma como se fossem testes pós-publicação.

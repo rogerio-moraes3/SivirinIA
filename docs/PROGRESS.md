@@ -63,3 +63,13 @@ Imagem do worker construída e validada: PDF textual e digitalizado em container
 ## Autorização de publicação recebida — 20/10/2026
 
 Usuário autorizou homologação sem gastos e sem lançamento comercial, confirmou contas Vercel/Supabase e ausência de host persistente. Não solicitar autorização novamente. Verificação atual: nenhum vínculo .vercel, variável de deploy/Supabase ou conector de deploy disponível; Git main preservado em b2fbe27. Requisito seguro VERCEL_TOKEN preparado no rascunho para api.vercel.com; ainda sem credencial aplicada/verificada. Passos de acesso e alternativas de worker registrados em STAGING_ACCESS.md. Pendentes: acesso autenticado, projeto separado, e-mails dos testadores e decisão viável de worker. Sem URL ou testes remotos novos.
+
+## Oracle Always Free: avaliação autorizada — 20/10/2026
+
+Usuário escolheu avaliar VM gratuita Oracle, mantendo Vercel/Supabase/GitHub. Sem gastos, upgrade ou recurso com cobrança automática. Nenhuma VM/conta OCI criada; credenciais Vercel continuam sem binding aplicado.
+
+Preparados deploy/oci/README.md, cloud-init de Ubuntu 24.04 e serviço systemd para host dedicado, sem dados/segredos/portas públicas do worker. Regra de metadata preserva DNS e demais regras, exige DOCKER-USER e será executada somente na VM. Compose passou a nomear a imagem explicitamente, permitir WORKER_ENV_FILE e montar CA confiável somente leitura. Corrigida diferença entre tag default do Compose e a tag exigida pelo teste da imagem.
+
+Manifesto OCI do digest Node consultado no registro: linux/amd64 e linux/arm64/v8 presentes. Lockfile inclui esbuild/canvas ARM64. Nova aceitação scripts/check-worker-vm.py usa apenas Python do host e executa os binários reais dentro do container, confirmando arquitetura nativa; PDF textual e digitalizado/OCR passaram no host x86_64, sem rede/root. ARM nativo ainda não executado; não anunciar validação ARM concluída.
+
+Páginas oficiais Oracle/Google bloqueadas pelo proxy no CONNECT (403); condições/quotas históricas são identificadas como não revalidadas no guia. Domínios docs.oracle.com/www.oracle.com/cloud.google.com/render.com foram adicionados ao rascunho de rede, preservando destinos existentes. Aplicar configuração e reconsultar fontes; disponibilidade A1 depende do console da conta/região. Candidata: 1 OCPU/6 GB/boot 50 GB, somente se todos os componentes constarem gratuitos. Fallback local Docker/WSL2 permanece possível sem bloquear preparação do frontend.

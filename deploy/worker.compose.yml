@@ -1,9 +1,17 @@
 services:
   worker:
+    image: sivirinia-worker:staging
     build:
       context: ..
       dockerfile: deploy/worker.Dockerfile
-    env_file: /etc/sivirinia/worker.env
+    env_file: ${WORKER_ENV_FILE:-/etc/sivirinia/worker.env}
+    environment:
+      WORKER_CA_FILE: /run/secrets/worker-ca.crt
+    volumes:
+      - type: bind
+        source: ${WORKER_CA_HOST_FILE:-/etc/ssl/certs/ca-certificates.crt}
+        target: /run/secrets/worker-ca.crt
+        read_only: true
     restart: unless-stopped
     init: true
     read_only: true
@@ -17,4 +25,4 @@ services:
       driver: json-file
       options:
         max-size: 10m
-        max-file: '3'
+        max-file: "3"

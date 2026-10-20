@@ -31,3 +31,7 @@ Não foi escolhido ou ativado provedor gratuito de VM. Este ambiente Codex é te
 ## Critério de conclusão
 
 Acesso às contas, projeto separado, e-mails de teste e host do worker continuam pré-requisitos. Só depois de deploy confirmado e dos testes remotos de STAGING.md fornecer o domínio real como funcional. Ainda não há URL pública confirmada, migração remota aplicada ou testes pós-publicação nesta etapa.
+
+## Decisão posterior: avaliar Oracle primeiro
+
+O usuário escolheu avaliar Always Free, sem gastos, upgrades ou cobrança automática. Guia técnico, condições de criação e fallback em [deploy/oci/README.md](../deploy/oci/README.md). A autorização de recursos gratuitos já existe; não pedir aprovação genérica novamente. Continua necessário verificar oferta real e capacidade na conta/região e conectar os acessos. Nenhum serviço foi criado.

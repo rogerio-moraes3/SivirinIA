@@ -1,0 +1,27 @@
+#cloud-config
+# For a NEW Ubuntu 24.04 ARM64/x86_64 test VM only, after console confirms no cost.
+# No credentials, SSH private keys, app data or automatic cloud provisioning.
+package_update: true
+package_upgrade: true
+ssh_pwauth: false
+disable_root: true
+packages:
+  - ca-certificates
+  - git
+  - docker.io
+  - docker-compose-v2
+  - docker-buildx
+  - unattended-upgrades
+write_files:
+  - path: /etc/sivirinia/README
+    owner: root:root
+    permissions: "0600"
+    content: |
+      Store worker.env here, root-owned mode 0600. Never use postgres/service_role.
+      Configure only the isolated test project's restricted worker login.
+      No frontend, database, Docker TCP socket or OCR service is exposed here.
+runcmd:
+  - [chmod, "0700", /etc/sivirinia]
+  - [systemctl, enable, --now, docker]
+  - [install, -d, -o, root, -g, root, -m, "0755", /opt/sivirinia]
+final_message: "Base installed. Check cloud-init status, network ACLs and free-tier selection before configuring the worker."

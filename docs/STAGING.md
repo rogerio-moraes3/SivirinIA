@@ -40,7 +40,7 @@ Substituir `ORIGEM_REAL`; não é uma URL já publicada. Não liberar curingas d
 
 ## 3. Worker persistente
 
-O papel restrito `sivirinia_worker` é criado pelas migrations. No SQL Editor, definir uma senha aleatória para ele e habilitar LOGIN; o comando é `ALTER ROLE sivirinia_worker LOGIN PASSWORD 'SENHA_GERADA';` (não usar esse literal, não registrar senha em código/chat). Não conceder memberships, BYPASSRLS, superuser ou acesso administrativo. Copiar conexão para `/etc/sivirinia/worker.env`, pertencente ao operador e modo 600, usando `deploy/worker.env.example`. No pooler de sessão, usuário `sivirinia_worker.REFERENCIA`; no direto, `sivirinia_worker`. Conexão direta pode exigir IPv6. O processo verifica `current_user` e TLS com certificado/hostname; erro de certificado não deve ser ignorado. Se necessário, montar a CA de testes como arquivo somente leitura e indicar `WORKER_CA_FILE`.
+O papel restrito `sivirinia_worker` é criado pelas migrations. No SQL Editor, definir uma senha aleatória para ele e habilitar LOGIN; o comando é `ALTER ROLE sivirinia_worker LOGIN PASSWORD 'SENHA_GERADA';` (não usar esse literal, não registrar senha em código/chat). Não conceder memberships, BYPASSRLS, superuser ou acesso administrativo. Copiar conexão para `/etc/sivirinia/worker.env`, pertencente ao operador e modo 600, usando `deploy/worker.env.example`. No pooler de sessão, usuário `sivirinia_worker.REFERENCIA`; no direto, `sivirinia_worker`. Conexão direta pode exigir IPv6. O processo verifica `current_user` e TLS com certificado/hostname; erro de certificado não deve ser ignorado. O Compose monta o bundle de CAs do host somente leitura. Se necessário, selecionar uma CA de testes confiável com `WORKER_CA_HOST_FILE` no ambiente do host; o container usa o caminho interno de certificado. Para execução Node manual, indicar `WORKER_CA_FILE`.
 
 No checkout dessa máquina, executar:
 
@@ -76,3 +76,5 @@ As suítes Playwright atuais são deliberadamente locais: não apontá-las para 
 ## O que o testador poderá experimentar após esse aceite
 
 Cadastro/login, organizações/perfis, agentes, documentos e OCR via fila, perguntas **documentais/extrativas** com fontes, histórico e relatórios. Não são LLM externo homologado. Crawler público segue sem validação positiva neste ambiente; sincronização agendada ainda falta. Mercado Pago tem somente ledger sandbox/contratos, sem checkout ou cobrança funcional. Conectores, automações, WhatsApp oficial, white label e enterprise ainda exigem desenvolvimento.
+
+Para a VM gratuita candidata Oracle/ARM, consulte [deploy/oci/README.md](../deploy/oci/README.md). A oferta e a capacidade precisam ser confirmadas na conta; não há VM criada.

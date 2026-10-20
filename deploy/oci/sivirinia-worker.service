@@ -1,0 +1,22 @@
+[Unit]
+Description=SivirinIA isolated staging document worker
+Requires=docker.service
+PartOf=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/sivirinia/worker.env
+ConditionPathExists=/opt/sivirinia/deploy/worker.compose.yml
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/sivirinia
+EnvironmentFile=-/etc/sivirinia/host.env
+ExecStartPre=/bin/sh /opt/sivirinia/deploy/oci/block-container-metadata.sh
+ExecStart=/usr/bin/docker compose -f deploy/worker.compose.yml up --detach --no-build --pull never
+ExecStop=/usr/bin/docker compose -f deploy/worker.compose.yml stop
+TimeoutStartSec=120
+TimeoutStopSec=90
+
+[Install]
+WantedBy=multi-user.target

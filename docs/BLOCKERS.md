@@ -47,3 +47,9 @@ Leitura do schema oficial `openapi.vercel.sh/vercel.json` retornou HTTP 403; a v
 ### Atualização após autorização
 
 Publicação de homologação está autorizada desde 20/10/2026; não falta mais aprovação de deploy. As contas existem, mas as sessões/acessos ainda não estão disponíveis neste ambiente. Usuário não tem servidor persistente: escolha de worker gratuito permanece pendente. Ver STAGING_ACCESS.md. Não confundir cadastro de requisito VERCEL_TOKEN no rascunho com token configurado ou conta conectada.
+
+### Oracle escolhida para avaliação
+
+Ainda não há acesso a uma tenancy/região OCI. Consultas oficiais docs.oracle.com/www.oracle.com/cloud.google.com foram bloqueadas pelo proxy no CONNECT 403. Domínios foram incluídos no rascunho, sem comprovar aplicação ao runtime. Não confirmar limites vigentes/Always Free/capacidade por memória de documentação histórica. O console precisa confirmar conta gratuita, selo Always Free de compute/boot e custo zero de rede/endereço/opções antes de criar.
+
+Imagem base suporta ARM64 no índice e dependências nativas existem no lockfile, mas host é x86_64 sem emulador: falta aceite ARM real. Templates cloud-init/systemd/firewall preparados e ainda não inicializados numa VM. Systemd-analyze no host atual não valida docker.service/caminho /usr/bin/docker ausentes nele. Alternativa local Docker/WSL2 continua viável enquanto houver computador ligado.
