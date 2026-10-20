@@ -9,3 +9,5 @@ Os valores dos PDFs são hipóteses, não cotações atuais. Não há estimativa
 Controles atuais: IA desligada explicitamente; modelo configurável; máximo de 1.000 tokens de saída por geração; pergunta limitada a 2.000 caracteres; no máximo oito trechos; cotas no banco; limite de perguntas e admissões de ingestão por minuto; uma ingestão simultânea por tenant.
 
 Antes de produção: metering de embeddings, teto monetário, armazenamento, tarefas, distribuição de custo e alertas. As cotas atuais não substituem orçamento financeiro do provedor nem proteção contra abuso por muitas contas gratuitas.
+
+Originais e versões agora têm quota por plano no banco (100 MiB inicial por organização), até 20 versões por fonte. Execução sequencial por organização e no máximo três tentativas. Não há serviço de fila/Storage externo contratado. Embeddings no worker ainda não foram implementados; ingestão de arquivos/texto é textual.

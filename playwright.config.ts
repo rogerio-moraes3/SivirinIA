@@ -23,10 +23,17 @@ export default defineConfig({
     },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: "npm run build && npm start",
-    url: "http://127.0.0.1:3000/api/health",
-    reuseExistingServer: false,
-    timeout: 180000,
-  },
+  webServer: [
+    {
+      command: "npm run build && npm start",
+      url: "http://127.0.0.1:3000/api/health",
+      reuseExistingServer: false,
+      timeout: 180000,
+    },
+    {
+      command: "npm run worker:setup && npm run worker",
+      wait: { stdout: /Worker pronto\./ },
+      timeout: 15000,
+    },
+  ],
 });

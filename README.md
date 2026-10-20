@@ -13,6 +13,9 @@ cd /workspace/SivirinIA
 bash scripts/install.sh
 npm run db:start
 npm run env:local
+# Em outro terminal, mantenha o worker em execução:
+npm run worker
+# Aplicação:
 npm run dev
 ```
 
@@ -36,7 +39,7 @@ Esse comando verifica a aplicação, o catálogo via API SQL e o serviço Auth. 
 - Importação de PDF com texto, DOCX, TXT, Markdown, CSV e HTML, até 10 MB/2 milhões de caracteres; hash, fragmentação e indexação textual em português.
 - Perguntas com trechos reais, documento, página de PDF e versão; recusa quando não há evidência.
 - Histórico privado com múltiplas perguntas, feedback, CSV, indicadores observados, perguntas frequentes e sem resposta, uso das fontes e consumo.
-- Fontes com permissões por perfil, atualização/reindexação e versões de metadados. O texto integral das versões antigas e os arquivos originais ainda não são armazenados.
+- Fontes com permissões por perfil, atualização/reindexação e versões de metadados. Novos arquivos/textos entram em fila durável e preservam original privado e conteúdo integral por versão. Downloads respeitam a ACL atual. Importações antigas e URLs síncronas podem ter somente metadados.
 - Link compartilhável e widget Shadow DOM/iframe com seleção explícita de fontes públicas, confirmação do administrador, token rotacionável e revogação. Alterações de ACL ou rebaixamento do publicador revogam os links.
 - Planos configuráveis no banco e cotas transacionais. Nenhuma cobrança está ativa.
 - Site comercial responsivo com preços identificados como propostas, sem checkout fictício.
@@ -75,6 +78,6 @@ O workflow GitHub Actions está configurado; sua execução no GitHub ainda não
 
 A aplicação usa os endpoints padrão de Supabase. Para um projeto gerenciado autorizado, configurar a URL/chave pública e aplicar as migrations versionadas. Não usar service_role no frontend. A configuração Compose é **somente de desenvolvimento**, com confirmação de e-mail desativada e caixa de e-mail local. Não a exponha como instalação comercial.
 
-Em produção: definir APP_URL com a origem HTTPS real e permiti-la nos callbacks do Auth; ativar confirmação de e-mail e SMTP; configurar armazenamento privado, backups, monitoramento, limites financeiros e políticas de retenção; completar testes e revisões de segurança/LGPD. Callback não confia em host arbitrário nem no endereço interno de bind 0.0.0.0.
+Em produção: definir APP_URL com a origem HTTPS real e permiti-la nos callbacks do Auth; ativar confirmação de e-mail e SMTP; dimensionar o armazenamento privado, backups, monitoramento, limites financeiros e políticas de retenção; completar testes e revisões de segurança/LGPD. Callback não confia em host arbitrário nem no endereço interno de bind 0.0.0.0.
 
 Nenhum deploy público foi feito. Pagamentos, conectores, automações, WhatsApp, SSO e white label ainda precisam de implementação e validação, conforme o roadmap.

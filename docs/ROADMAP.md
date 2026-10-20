@@ -12,3 +12,5 @@ A especificação completa está em PRD.md. Progresso verificável em PROGRESS.m
 7. Distribuição e escala: white label, revenda, contas parceiras, domínio customizado, comissões, otimização e API pública versionada.
 
 Cada módulo exige validação funcional e de isolamento antes de ser anunciado. Não avançar sobre falha crítica de segurança não corrigida. Não confundir os critérios comerciais dos PDFs com permissões de gastos ou publicação.
+
+Concluído nesta etapa: fila durável e parser separado, originais privados, snapshots integrais para novos arquivos/textos e download com ACL. OCR, embeddings no worker e atualização incremental ainda pendentes.

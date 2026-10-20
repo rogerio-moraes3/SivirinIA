@@ -4,8 +4,8 @@
 
 - ESLint: passou, sem erros ou avisos.
 - TypeScript e geração de tipos de rotas: passaram.
-- Vitest: **56 testes passaram em 7 arquivos**.
-- PostgreSQL real: **76 asserções passaram** — 53 de isolamento/permissões/cotas/convites/citações/exclusão e 23 de publicação restrita/revogação.
+- Vitest: **69 testes passaram em 9 arquivos**.
+- PostgreSQL real: **122 asserções passaram** — 53 de isolamento/permissões/cotas/convites/citações/exclusão 23 de publicação restrita/revogação e 46 da fila, originais, snapshots, ACL, leases, cancelamento, limites e recuperação.
 - Build de produção Next.js: passou.
 - Playwright/Chromium na aplicação compilada: **5 jornadas passaram**, sem testes ignorados.
 - Auditoria das dependências de produção: **0 vulnerabilidades reportadas**.
@@ -47,3 +47,7 @@ Fixtures SQL são revertidas. Jornadas de navegador mantêm contas/organizaçõe
 `bash scripts/install.sh` foi executado integralmente com npm ci e pull das quatro imagens fixadas. O starter foi repetido preservando configuração/dados, e o gateway foi encerrado e reativado pelo próprio starter. As 76 asserções SQL passaram após recriar os containers.
 
 `npm run test:cold-start` também passou: outro projeto Compose, volume vazio, bootstrap do zero, 9 migrations, GoTrue real, sessão JWT, organização, agente, indexação e busca autenticada. O projeto/volume temporário foi removido, preservando o runtime principal. Isso valida instalação limpa local, não restauração de snapshot em uma tarefa nova.
+
+## Ingestão assíncrona
+
+Os cinco E2E passaram novamente com worker restrito e parser em processo filho reais. PDF: download byte a byte igual ao arquivo enviado, atualização por fila e leitura integral da versão anterior. Unitários exercitam PDF/DOCX/texto no processo separado, arquivo inválido, timeout e classificação segura de erros. SQL adicional exercita lease expirado/retomado, permissão revogada, alteração concorrente, cota de armazenamento e exclusão em cascata. Cold-start passou com as migrations atuais (a mensagem antiga do script ainda mencionava 9 migrations).

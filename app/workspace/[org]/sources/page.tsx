@@ -1,6 +1,13 @@
+import { TaskRefresh } from "@/components/task-refresh";
 import { roleLabels } from "@/lib/roles";
 import { requireOrg } from "@/lib/access";
-import { ingestSource, deleteSource, setSourceRoles } from "@/lib/actions";
+import {
+  ingestSource,
+  deleteSource,
+  setSourceRoles,
+  cancelDocumentTask,
+  retryDocumentTask,
+} from "@/lib/actions";
 import { Form } from "@/components/forms";
 import { PageTitle, Empty, date } from "@/components/ui";
 export default async function Sources({
@@ -8,10 +15,15 @@ export default async function Sources({
   searchParams,
 }: {
   params: Promise<{ org: string }>;
-  searchParams: Promise<{ q?: string; source?: string; kind?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    source?: string;
+    kind?: string;
+    revision?: string;
+  }>;
 }) {
   const { org } = await params;
-  const { q, source, kind } = await searchParams;
+  const { q, source, kind, revision } = await searchParams;
   const { db, member } = await requireOrg(org);
   const write = ["owner", "admin", "editor"].includes(member.role);
   let query = db
@@ -40,6 +52,50 @@ export default async function Sources({
         .eq("source_id", source)
         .order("version", { ascending: false })
     : { data: null };
+  const { data: tasks } = write
+    ? await db
+        .from("document_tasks")
+        .select("id,title,status,attempts,error_code,source_id")
+        .eq("organization_id", org)
+        .order("created_at", { ascending: false })
+        .limit(20)
+    : { data: null };
+  const { data: snapshots } = source
+    ? await db
+        .from("document_snapshots")
+        .select("version,filename")
+        .eq("organization_id", org)
+        .eq("source_id", source)
+    : { data: null };
+  const selectedRevision =
+    revision && /^\d+$/.test(revision) ? Number(revision) : null;
+  const { data: historicalPages } =
+    source && selectedRevision
+      ? await db.rpc("get_document_version", {
+          org,
+          source,
+          revision: selectedRevision,
+        })
+      : { data: null };
+  const taskLabels: Record<string, string> = {
+    queued: "Na fila",
+    processing: "Processando",
+    retry: "Aguardando nova tentativa",
+    complete: "Concluída",
+    failed: "Falhou",
+    cancelled: "Cancelada",
+  };
+  const errorLabels: Record<string, string> = {
+    invalid_document: "Documento inválido ou sem texto; verifique o arquivo.",
+    worker_timeout: "Tempo de processamento excedido.",
+    quota_exceeded: "Limite de páginas, armazenamento ou versões atingido.",
+    duplicate: "Este conteúdo já foi importado.",
+    access_revoked: "Permissão de edição revogada.",
+    version_conflict:
+      "Fonte alterada durante o processamento; envie novamente.",
+    internal_error: "Falha interna; nova tentativa controlada.",
+    network_unavailable: "Rede indisponível.",
+  };
   return (
     <>
       <PageTitle
@@ -47,6 +103,55 @@ export default async function Sources({
         title="A fonte de boas respostas."
         description="Documentos reais, organizados e pesquisáveis no seu espaço."
       />
+      {write && (
+        <section className="card" aria-label="Processamento de documentos">
+          <h2>Processamento de documentos</h2>
+          <p>
+            Originais privados. Extração em segundo plano, com até três
+            tentativas. Limite de 10 MB por arquivo e 20 versões por fonte.
+          </p>
+          <TaskRefresh
+            active={Boolean(
+              tasks?.some((t) =>
+                ["queued", "processing", "retry"].includes(t.status),
+              ),
+            )}
+          />
+          {!tasks?.length && <p className="muted">Nenhuma tarefa enviada.</p>}
+          {tasks?.map((t) => (
+            <div className="citation" key={t.id} data-testid="document-task">
+              <strong>{t.title}</strong> · {taskLabels[t.status]} · Tentativa{" "}
+              {t.attempts}/3
+              {t.error_code && (
+                <p role="status">
+                  {errorLabels[t.error_code] || "Falha de processamento."}
+                </p>
+              )}
+              {t.status === "complete" && t.source_id && (
+                <a href={`?source=${t.source_id}`}>Abrir fonte processada</a>
+              )}
+              {["queued", "processing", "retry", "failed"].includes(
+                t.status,
+              ) && (
+                <form action={cancelDocumentTask.bind(null, org)}>
+                  <input type="hidden" name="task" value={t.id} />
+                  <button className="text-button danger">
+                    Cancelar e descartar original pendente
+                  </button>
+                </form>
+              )}
+              {t.status === "failed" && t.attempts < 3 && (
+                <Form
+                  action={retryDocumentTask.bind(null, org)}
+                  label="Tentar novamente"
+                >
+                  <input type="hidden" name="task" value={t.id} />
+                </Form>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
       <form className="search-bar">
         <input
           name="q"
@@ -160,15 +265,47 @@ export default async function Sources({
           {versions?.map((v) => (
             <p key={v.id}>
               Versão {v.version} · {date(v.created_at)} · {v.page_count} páginas
+              {snapshots?.some((s) => s.version === v.version) ? (
+                <>
+                  {" "}
+                  ·{" "}
+                  <a
+                    href={`/api/organizations/${org}/sources/${source}/original?version=${v.version}`}
+                  >
+                    Baixar original v{v.version}
+                  </a>{" "}
+                  ·{" "}
+                  <a href={`?source=${source}&revision=${v.version}`}>
+                    Ler versão {v.version}
+                  </a>
+                </>
+              ) : (
+                " · Somente metadados (importação anterior à fila)"
+              )}
             </p>
           ))}
+          {Array.isArray(historicalPages) && (
+            <section aria-label="Conteúdo histórico">
+              <h3>Conteúdo integral da versão {selectedRevision}</h3>
+              {historicalPages.map(
+                (p: { text: string; page: number | null }, i: number) => (
+                  <div className="citation" key={i}>
+                    <strong>
+                      {p.page ? `Página ${p.page}` : `Seção ${i + 1}`}
+                    </strong>
+                    <p className="prewrap">{p.text}</p>
+                  </div>
+                ),
+              )}
+            </section>
+          )}
           {write && sources?.[0] && (
             <details className="citation">
               <summary>Atualizar esta fonte</summary>
               <p>
                 A atualização substitui os trechos pesquisáveis e registra uma
-                nova versão. O histórico registra metadados; arquivos originais
-                não são armazenados.
+                nova versão com conteúdo integral e original privado. Versões
+                anteriores à fila podem conter somente metadados.
               </p>
               <Form
                 action={ingestSource.bind(null, org)}

@@ -6,8 +6,8 @@
 - Supabase SSR com cookies; validação por `auth.getUser()` nas operações privadas e atualização de sessão em `proxy.ts`.
 - PostgreSQL com RLS em todas as tabelas empresariais. `has_role` e `can_read_source` verificam a identidade autenticada; funções SECURITY DEFINER têm search_path vazio e privilégios explícitos.
 - Escritas passam por funções transacionais com autorização, lock da organização, cotas e auditoria. Não há chave administrativa na aplicação.
-- Importação síncrona limitada a 10 MB/2 milhões de caracteres, com job registrado, uma importação simultânea por organização, cinco admissões por minuto e reserva de páginas antes dos embeddings.
-- Extração em memória; o arquivo original não é armazenado nesta versão. PostgreSQL armazena texto, fragmentos, hash, versão e metadados. O parser DOCX lê somente o XML do documento, sem executar macros ou carregar links externos.
+- Arquivos/textos de até 10 MB/2 milhões de caracteres entram em fila PostgreSQL durável. Worker com papel restrito, parser separado e uma tarefa por organização; cinco admissões/minuto. URLs ainda seguem caminho síncrono com reserva antes dos embeddings.
+- Originais privados e snapshots integrais de novos arquivos/textos ficam em PostgreSQL bytea/JSONB, com quota. A aplicação baixa originais somente após autenticação e ACL atual da fonte. Parser em processo filho com heap/prazo limitados. O parser DOCX lê somente o XML do documento, sem executar macros ou carregar links externos.
 - Busca textual GIN/português e similaridade pgvector opcional. O índice vetorial aproximado será introduzido após medição de volume; atualmente a similaridade é exata sobre os candidatos autorizados.
 - Chat privado com reserva atômica de quota, persistência de mensagens, referências e feedback. Pergunta atual é a entrada da recuperação; reformulação contextual ainda não existe.
 - Adaptação de IA OpenAI compatível com os endpoints oficiais de embeddings/chat; modelo é configuração, não uma promessa de disponibilidade.
@@ -19,7 +19,7 @@ O navegador nunca escolhe o tenant por confiança: o identificador é validado n
 
 ## Evolução
 
-Fila assíncrona com leases duráveis, armazenamento privado dos originais, provedores adicionais, cache por tenant, índice vetorial medido, personalização avançada do widget, billing reconciliado e conectores oficiais continuam no roadmap. Não introduzir serviços pagos antes de necessidade e autorização.
+Backend de objetos escalável, OCR, embeddings assíncronos, provedores adicionais, cache por tenant, índice vetorial medido, personalização avançada do widget, billing reconciliado e conectores oficiais continuam no roadmap. Não introduzir serviços pagos antes de necessidade e autorização.
 
 Publicações são revogáveis e rotacionam token a cada reativação; alterações de ACL da fonte ou rebaixamento de perfil do publicador revogam links. Perguntas públicas aceitas são registradas e consomem a cota mensal; respostas públicas não são persistidas nesta etapa. Não há memória de conversa pública nem feedback público.
 

@@ -52,14 +52,17 @@ test("cadastro → organização → agente → documento → pergunta citada �
     .fill("Política de reembolso E2E");
   await page.getByLabel("Conteúdo", { exact: true }).fill(content);
   await page.getByRole("button", { name: "Indexar conteúdo" }).click();
-  await expect(page.getByRole("status")).toContainText("Fonte indexada");
+  await expect(page.getByRole("status")).toContainText("Documento na fila");
+  await expect(
+    page.getByRole("link", { name: "Política de reembolso E2E", exact: true }),
+  ).toBeVisible();
   await page
     .getByLabel("Título", { exact: true })
     .fill("Política de reembolso E2E");
   await page.getByLabel("Conteúdo", { exact: true }).fill(content);
   await page.getByRole("button", { name: "Indexar conteúdo" }).click();
   await expect(page.getByRole("main").getByRole("alert")).toContainText(
-    "já foi importado",
+    "duplicado",
   );
   await page.goto(base + "/chat");
   await page.getByLabel("Sua pergunta").fill("Qual o prazo de reembolso?");
@@ -144,8 +147,19 @@ test("upload real de PDF, reindexação de texto e bloqueio de URL interna", asy
   await page
     .getByRole("button", { name: "Importar documento", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Fonte indexada");
+  await expect(page.getByRole("status")).toContainText("Documento na fila");
   await page.getByRole("link", { name: "policy.pdf", exact: true }).click();
+  const original = page.getByRole("link", {
+    name: "Baixar original v1",
+    exact: true,
+  });
+  const downloaded = await page.request.get(
+    (await original.getAttribute("href")) || "",
+  );
+  expect(downloaded.ok()).toBe(true);
+  expect(await downloaded.body()).toEqual(
+    (await import("node:fs")).readFileSync("tests/fixtures/policy.pdf"),
+  );
   await expect(
     page.getByText("Trecho 1 · página 1", { exact: false }),
   ).toBeVisible();
@@ -159,6 +173,13 @@ test("upload real de PDF, reindexação de texto e bloqueio de URL interna", asy
   await page.getByRole("button", { name: "Atualizar e reindexar" }).click();
   await expect(page.getByText("Versão 2", { exact: false })).toBeVisible();
   await expect(page.getByText("Versão 1", { exact: false })).toBeVisible();
+  await page.getByRole("link", { name: "Ler versão 1", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "Conteúdo histórico" }),
+  ).toContainText("Página 2");
+  await expect(
+    page.getByRole("link", { name: "Baixar original v2", exact: true }),
+  ).toBeVisible();
   await page.goto(base + "/sources");
   await page.getByLabel("URL HTTPS", { exact: true }).fill("https://127.0.0.1");
   await page
@@ -195,7 +216,10 @@ test("widget em outro site consulta somente fonte publicada e respeita revogaç�
     await page.getByLabel("Título", { exact: true }).fill(title);
     await page.getByLabel("Conteúdo", { exact: true }).fill(text);
     await page.getByRole("button", { name: "Indexar conteúdo" }).click();
-    await expect(page.getByRole("status")).toContainText("Fonte indexada");
+    await expect(page.getByRole("status")).toContainText("Documento na fila");
+    await expect(
+      page.getByRole("link", { name: title, exact: true }),
+    ).toBeVisible();
   }
   await page.goto(base + "/agents");
   await page.getByLabel("Nome", { exact: true }).fill("Assistente público E2E");

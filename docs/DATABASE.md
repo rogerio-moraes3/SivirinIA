@@ -17,3 +17,5 @@ Use `db:migrate` para instalar mudanças preservando dados. `db:reset` é destru
 PostgreSQL local 15: a imagem completa de PG17 excedeu o disco de 32 GB. Apenas banco, Auth, API, gateway e caixa de e-mail local são necessários. Studio, Storage, Realtime e demais serviços opcionais ficam excluídos. SQL e testes não dependem desses serviços.
 
 Scripts/db-test.mjs usa psql no PostgreSQL real e helpers SECURITY INVOKER de asserção, mantendo o papel/claims sob teste. As suítes executam em transações revertidas; não há banco simulado. O schema sivirinia_internal armazena os hashes de migrations e não é exposto pelo PostgREST.
+
+Migrations 0091/010/011 adicionam schema privado, document_tasks, document_snapshots e document_inputs interno; plano inclui storage_limit_bytes. Fila diferente de ingestion_jobs (reserva legada de URL). Execução usa papel sivirinia_worker, sem permissões diretas em tabelas. RPCs privadas não são expostas pelo PostgREST. Conclusão é transacional e revalida ACL, versão esperada, quota e lease.

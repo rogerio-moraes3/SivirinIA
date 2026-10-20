@@ -84,6 +84,9 @@ execFileSync(
 execFileSync(process.execPath, ["scripts/db-migrate.mjs"], {
   stdio: "inherit",
 });
+execFileSync(process.execPath, ["scripts/setup-worker.mjs"], {
+  stdio: "inherit",
+});
 console.log(
   "Auth, banco, API e gateway locais em execução. Migrations verificadas.",
 );

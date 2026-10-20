@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { supabase } from "./supabase/server";
 import { requireUser, requireOrg } from "./access";
 import { chunkPages, contentHash, MAX_CHARS, type Evidence } from "./knowledge";
-import { extractDocument, MAX_BYTES } from "./documents";
+import { MAX_BYTES } from "./documents";
 import { importUrl } from "./crawler";
 import { enrichChunks, embedTexts, answerQuestion } from "./ai";
 export type ActionState = { error?: string; success?: string };
@@ -214,37 +214,54 @@ export async function ingestSource(
     const sourceId = form.get("source")
       ? z.uuid().parse(form.get("source"))
       : null;
-    let pages;
-    let kind;
-    let title = String(form.get("title") || "").trim();
-    let origin: string | null = null;
-    if (mode === "url") {
-      const result = await importUrl(String(form.get("url")));
-      pages = result.pages;
-      kind = "url";
-      origin = result.url;
-      title = title || result.title;
-    } else if (mode === "file") {
-      const file = form.get("file");
-      if (!(file instanceof File) || !file.size || file.size > MAX_BYTES)
-        throw new Error("Arquivo inválido: limite de 10 MB.");
-      const result = await extractDocument(
-        file.name,
-        Buffer.from(await file.arrayBuffer()),
-      );
-      pages = result.pages;
-      kind = result.kind;
-      title = title || file.name;
-    } else if (mode === "text") {
-      const text = z
+    if (mode !== "url") {
+      let bytes: Buffer;
+      let filename: string;
+      const titleInput = String(form.get("title") || "").trim();
+      if (mode === "file") {
+        const file = form.get("file");
+        if (!(file instanceof File) || !file.size || file.size > MAX_BYTES)
+          throw new Error("Arquivo inválido: limite de 10 MB.");
+        filename = file.name.replace(/[\\/\r\n]/g, "_").slice(0, 250);
+        if (!/\.(pdf|docx|txt|md|csv|html)$/i.test(filename))
+          throw new Error("Formato de arquivo não suportado.");
+        bytes = Buffer.from(await file.arrayBuffer());
+      } else if (mode === "text") {
+        const text = z
+          .string()
+          .trim()
+          .min(1)
+          .max(MAX_CHARS)
+          .parse(form.get("content"));
+        bytes = Buffer.from(text, "utf8");
+        filename = "conteudo.txt";
+      } else throw new Error("Formato inválido.");
+      const title = z
         .string()
         .trim()
         .min(1)
-        .max(MAX_CHARS)
-        .parse(form.get("content"));
-      pages = [{ text, page: null }];
-      kind = "text";
-    } else throw new Error("Formato inválido.");
+        .max(250)
+        .parse(titleInput || filename);
+      const { error } = await db.rpc("enqueue_document", {
+        org,
+        source_title: title,
+        filename,
+        input_mode: mode,
+        input_base64: bytes.toString("base64"),
+        source: sourceId,
+      });
+      checked(error);
+      revalidatePath(`/workspace/${org}`, "layout");
+      return {
+        success:
+          "Documento na fila. Acompanhe o processamento abaixo; a fonte aparecerá após a indexação.",
+      };
+    }
+    const result = await importUrl(String(form.get("url")));
+    const pages = result.pages;
+    const kind = "url";
+    const origin = result.url;
+    let title = String(form.get("title") || "").trim() || result.title;
     title = z.string().trim().min(1).max(250).parse(title);
     const chars = pages.reduce((n, p) => n + p.text.length, 0);
     if (chars > MAX_CHARS)
@@ -252,11 +269,7 @@ export async function ingestSource(
     const chunks = chunkPages(pages);
     // Mirror the database: quota includes stored overlap and physical PDF page positions.
     const indexedChars = chunks.reduce((n, c) => n + c.content.length, 0);
-    const pageCount = Math.max(
-      1,
-      Math.ceil(indexedChars / 3000),
-      kind === "pdf" ? Math.max(...pages.map((p) => p.page || 1)) : 1,
-    );
+    const pageCount = Math.max(1, Math.ceil(indexedChars / 3000), 1);
     // Check quota before a potentially billed embedding request; DB rechecks under lock.
     const { data: organization } = await db
       .from("organizations")
@@ -696,6 +709,30 @@ export async function askPublicQuestion(
       mode: result.mode,
       citations: result.citations,
     };
+  } catch (error) {
+    return errorState(error);
+  }
+}
+
+export async function cancelDocumentTask(org: string, form: FormData) {
+  const { db } = await requireOrg(org, true);
+  const task = z.uuid().parse(form.get("task"));
+  const { error } = await db.rpc("cancel_document_task", { org, task });
+  checked(error);
+  revalidatePath(`/workspace/${org}/sources`);
+}
+export async function retryDocumentTask(
+  org: string,
+  _state: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  try {
+    const { db } = await requireOrg(org, true);
+    const task = z.uuid().parse(form.get("task"));
+    const { error } = await db.rpc("retry_document_task", { org, task });
+    checked(error);
+    revalidatePath(`/workspace/${org}/sources`);
+    return { success: "Documento reenviado à fila." };
   } catch (error) {
     return errorState(error);
   }

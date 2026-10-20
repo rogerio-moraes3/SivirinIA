@@ -22,7 +22,7 @@ A imagem oficial foi recebida visualmente, mas não há arquivo binário baixáv
 
 O runtime Compose é de desenvolvimento, com captura local de e-mail e confirmação automática de contas para testes. Não expor como instalação comercial. Para hospedagem autorizada, usar infraestrutura/fornecedores revisados, APP_URL HTTPS correto, confirmação de e-mail, SMTP, Storage privado, workers isolados, backups/restore, monitoramento, limites financeiros, retenção/exclusão e revisão especializada.
 
-Não declarar conformidade integral LGPD, residência no Brasil ou precisão garantida da IA. Originais e conteúdo integral das versões antigas ainda não são preservados; a interface explicita essa limitação.
+Não declarar conformidade integral LGPD, residência no Brasil ou precisão garantida da IA. Novos arquivos/textos preservam originais e versões integrais. Importações antigas/URLs não têm snapshot retroativo. Storage usa PostgreSQL privado limitado, ainda sem backend de objetos gerenciado, OCR ou varredura antimalware.
 
 ## Módulos futuros
 
