@@ -19,6 +19,15 @@ select sivirinia_internal.fail_document(current_setting('test.task')::uuid,(curr
 reset role;
 select pg_temp.assert_eq((select error_code from public.document_tasks where id=current_setting('test.task')::uuid),'ocr_page_limit','Erro de limite OCR permanece identificável');
 select pg_temp.assert_eq((select status from public.document_tasks where id=current_setting('test.task')::uuid),'failed','Limite OCR não causa retries sem utilidade');
+reset role;
+insert into public.knowledge_sources(id,organization_id,title,kind,content_hash,page_count,char_count) values('93000000-0000-0000-0000-000000000001','92000000-0000-0000-0000-000000000001','Misto anterior','pdf',repeat('f',64),1,30);
+insert into public.source_versions(organization_id,source_id,version,content_hash,page_count) values('92000000-0000-0000-0000-000000000001','93000000-0000-0000-0000-000000000001',1,repeat('f',64),1);
+insert into public.document_snapshots(organization_id,source_id,version,filename,input_hash,original,pages) values('92000000-0000-0000-0000-000000000001','93000000-0000-0000-0000-000000000001',1,'mixed.pdf',encode(extensions.digest(convert_to('x','UTF8'),'sha256'),'hex'),convert_to('x','UTF8'),'[{"text":"Nativo","page":1}]');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','91000000-0000-0000-0000-000000000001',true);
+select pg_temp.assert_throws($$select public.enqueue_document('92000000-0000-0000-0000-000000000001','Misto anterior','mixed.pdf','file','eA==','93000000-0000-0000-0000-000000000001')$$,'P0001','Documento duplicado','Reenvio sem mudança mantém regra de duplicação');
+select pg_temp.assert_lives($$select public.enqueue_document_with_ocr('92000000-0000-0000-0000-000000000001','Misto anterior','mixed.pdf','file','eA==',true,'93000000-0000-0000-0000-000000000001')$$,'OCR explícito permite reprocessar original já existente');
+select pg_temp.assert_throws($$select sivirinia_internal.enqueue_ocr_reprocess('92000000-0000-0000-0000-000000000001','Misto anterior','mixed.pdf','file','eA==','93000000-0000-0000-0000-000000000001',null)$$,'42501',null,'Helper de reprocessamento não é uma entrada pública');
 set local role anon;
 select pg_temp.assert_throws($$select public.enqueue_document_with_ocr('92000000-0000-0000-0000-000000000001','Anon','scan.pdf','file','eQ==',true)$$,'42501',null,'Anônimo não enfileira OCR');
 reset role;

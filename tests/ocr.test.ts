@@ -35,8 +35,11 @@ describe("OCR real Tesseract em português, sem provedor externo", () => {
     expect(result.pages[1].text).toContain("segundo fator");
     expect(result.pages[1].page).toBe(2);
   }, 30000);
-  it("reconhece imagem PNG e rejeita seu processamento sem opt-in", async () => {
+  it("reconhece PNG/JPEG e rejeita imagem sem opt-in", async () => {
     expect((await extract("ocr-ptbr-1.png")).pages[0].text).toContain(
+      "comprovante",
+    );
+    expect((await extract("ocr-ptbr.jpg")).pages[0].text).toContain(
       "comprovante",
     );
     await expect(extract("ocr-ptbr-1.png", false)).rejects.toThrow(
