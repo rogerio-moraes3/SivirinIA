@@ -2,57 +2,48 @@
 
 ## Implementado e testado localmente
 
-- Fundação Next.js/React/TypeScript/Tailwind; site comercial e painel responsivo em português.
-- Cadastro/login/logout, sessões HttpOnly, recuperação por e-mail local e callback com origem validada.
-- Organizações, múltiplos espaços, cinco perfis, convites por código/e-mail, alteração de perfil, renomeação e exclusão de organização mediante confirmação do proprietário.
-- Migrations, RLS, vínculos de tenant, autorização, cotas transacionais, auditoria e revogação de evidência após exclusão/restrição de fonte.
-- Agentes, edição/exclusão, fontes permitidas; perguntas privadas com histórico, referências, feedback e recusa sem evidência.
-- PDF/DOCX/TXT/Markdown/CSV/HTML: extração, páginas de PDF, hash, fragmentos e busca textual em português. PDF e texto têm jornada E2E; DOCX real e demais extratores têm testes unitários.
-- Atualização de fonte e versões de metadados, ACL por perfil e remoção de índices. Novos arquivos/textos usam originais privados em PostgreSQL, snapshots integrais por versão e download autorizado. Importações anteriores e URL síncrona continuam somente com metadados.
-- Compartilhamento e widget Shadow DOM/iframe, fontes públicas selecionadas, confirmação explícita, token de 256 bits, rotação e revogação; teste em segunda origem HTTP real.
-- Consumo mensal, cotas de agentes/páginas, catálogo de planos sem cobrança.
-- Relatórios determinísticos do histórico privado: frequência por texto normalizado, ausência de evidência/falhas, fontes citadas/sem uso, tokens/custo conhecido, atenção por idade e exportação CSV implementada.
+- Next.js/TypeScript/React/Tailwind; site comercial e painel responsivo em português.
+- Cadastro, login, recuperação, sessões HttpOnly, organizações, cinco perfis, convites, RLS, isolamento, auditoria e cotas transacionais.
+- Agentes, fontes permitidas, perguntas citadas, histórico privado, feedback, publicação por opt-in, widget em segunda origem e revogação.
+- PDF/DOCX/texto/Markdown/CSV/HTML e PNG/JPEG por OCR: fila durável, worker restrito, parser separado, leases, retentativas, cancelamento, originais privados, snapshots integrais e download com ACL.
+- OCR opcional local em português: PDF digitalizado/misto, imagens raster e imagens referenciadas em DOCX. Modelo oficial com hash fixado; limites de páginas, tempo, memória e dimensões; limpeza do grupo de processos e temporários. Veja OCR.md.
+- Reprocessamento OCR do mesmo original autorizado, sem enfraquecer a duplicação para importações comuns. Atualizações preservam IDs/vetores de trechos inalterados na mesma posição/página.
+- Busca textual e vetorial/híbrida com pgvector, validação de referências, normalização de perguntas e escopo do agente. Teste SQL usa vetores de fixture, sem alegar embeddings de fornecedor real.
+- Geração/embeddings: adaptadores com ativação explícita, tarifas obrigatórias, limites de entrada/saída e estimativa conservadora de custo antes de chamar o provedor. Indexação valida orçamento de todos os lotes antes da primeira chamada. Não há chamada paga realizada.
+- Possíveis divergências numéricas de prazos são sinalizadas com as fontes, sem escolher uma regra nem chamar o modelo. Heurística estreita; não é detecção semântica geral de contradições.
+- Inteligência do histórico privado, relatórios PDF/CSV por período, indicadores observados e limites explícitos.
 
-## Implementado, com bloqueio de validação real
+## Implementado parcialmente / aguardando validação externa
 
-- Embeddings e geração citada OpenAI: adaptador, controle de ativação, tokens, preço configurável, timeout, lotes e validação de referências. Contratos testados com simulador. **Bloqueado por credencial/modelo e autorização de custos.** IA desligada por padrão.
-- URL HTTPS: crawler com proteção SSRF e robots.txt; validações e rejeição de rede privada testadas. **Importação positiva bloqueada pelo DNS nativo EAI_AGAIN da nuvem.** Não remover a proteção para contornar isso.
-- Identidade: nome oficial centralizado e paleta baseada na referência. **Arquivo binário original da logo não está disponível no checkout/anexos baixáveis.** Monograma atual é provisório, sem alegação de ser a logo enviada.
+- Crawler BFS, sitemaps/índices, hashes e diferenças por página, CLI e relatórios de falha. Não indica remoções após varredura incompleta. **Ainda não conectado à fila/painel nem a um agendador.** Importação positiva pública bloqueada pelo DNS da nuvem; CRAWLER.md.
+- Cobrança sandbox: intenções, ledger idempotente, isolamento, reconciliador restrito, painel de registros de teste, verificador de assinatura e leitura de pagamentos Mercado Pago preparados. **Checkout, recorrência e receptor de webhook não estão conectados.** Veja BILLING.md.
+- OpenAI real: falta credencial/modelo autorizado, tarifas atuais e autorização de custos. AI_ENABLED permanece false; contratos simulados não são homologação de LLM.
 
-## Evidências
+## Evidências desta continuação
 
-79 testes unitários, 136 asserções SQL reais e 6 jornadas E2E foram aprovadas (cinco na execução geral, sexta em reexecução focada após correção de seletores de teste). A reinstalação com lockfile, o reinício de processos e a inicialização limpa em stack/volume isolados também passaram. Lint, TypeScript e build passaram. Detalhes e limites em TESTING.md. Nenhuma funcionalidade está declarada pronta para produção. Nenhum serviço pago ou deploy público ativado.
+107 testes unitários em 14 arquivos, 168 asserções SQL e avaliação documental sintética 20/20 aprovados. Sete jornadas E2E passaram juntas na aplicação compilada, incluindo PDF digitalizado, reprocessamento do mesmo original e painel financeiro vazio real. Lint, TypeScript, build e inicialização limpa com migrations atuais passaram. Auditoria de dependências de produção: zero vulnerabilidades reportadas. Detalhes em TESTING.md.
 
-## Ainda não iniciado/concluído
+Nenhum deploy público, serviço pago ou cobrança real ativado. O produto ainda não está pronto para produção. CI remoto não verificado: a consulta GitHub Actions recebeu HTTP 403.
 
-- Crawler de sites/sitemaps, sincronização agendada, armazenamento de objetos escalável e embeddings no worker. Fila/worker e snapshots completos para novos arquivos/textos implementados.
-- Avaliação com provedor real e corpus empresarial, reranking, contradições, reformulação contextual da recuperação, resumos e medição financeira completa dos embeddings. Avaliação extrativa sintética de 12 casos passou; contrato de perguntas anteriores para geração foi implementado.
-- Pagamentos, assinaturas operacionais, webhooks reconciliados, upgrade/downgrade e emissão fiscal. Catálogo e quotas não equivalem a billing implementado.
-- API pública com chaves/escopos/OpenAPI; feedback e histórico do chat público; personalização avançada e canais.
-- Conectores internacionais/brasileiros, ferramentas/automações/MCP, WhatsApp, voz, SSO, white label, parceiros e painel do operador.
-- Retenção automatizada, exclusão da conta Auth, operação de backup/restore, proteção financeira/abuso completa, revisão independente de segurança/LGPD e documentos jurídicos finais.
+## Bloqueios externos
 
-## Ponto exato de retomada
+- DNS nativo: EAI_AGAIN. Tentativa DoH segura e documentação oficial Mercado Pago: HTTP 403. Não remover pinning, TLS, proteção SSRF ou validar pagamentos por notificações não reconciliadas.
+- Credenciais/modelos/orçamento para teste real de IA e conta de teste Mercado Pago não configurados. Não pedir segredos em chat.
+- Arquivo binário da logo oficial ausente no checkout/anexos baixáveis; monograma é provisório.
 
-1. Ler README, AGENTS, BLOCKERS e TESTING; usar este checkout existente.
-2. Iniciar o runtime mínimo com npm run db:start; preservar .local/runtime.env e o volume. Aplicação com npm run dev em uma única instância, ou npm start após build.
-3. Para testar geração real, obter credencial/modelos autorizados em configuração segura, autorização explícita de gastos e avaliar perguntas/citações. Não pedir segredo em chat nem ativar IA silenciosamente.
-4. Originais/fila implementados: executar npm run worker em processo próprio. Próximo trabalho: Evolução do crawler/sincronização segura; depois billing/conectores. Avaliação documental, escopo de agentes, manutenção incremental de trechos e exportação PDF por período já implementados.
-5. Commits locais enviados a origin/main sem force push. Consulta de GitHub Actions bloqueada por HTTP 403; CI remoto não verificado. Nenhuma publicação de site/snapshot nem restauração em tarefa nova.
+## Ainda não implementado / concluído
 
-## Etapa de ingestão assíncrona validada
+- Backend de objetos escalável, OCR adversarial amplo, reconstrução semântica de tabelas, embeddings no worker, retenção e backup/restore operacional.
+- Reranking, reformulação contextual da recuperação, contradições gerais e medição financeira completa de embeddings/infraestrutura.
+- Sincronização de websites operacional/agendada; checkout/assinaturas/upgrades/cancelamentos no PSP e fiscal.
+- Conectores brasileiros/internacionais, API comercial com chaves/escopos, ações/automações, WhatsApp, SSO, white label, parceiros e painel do operador.
+- Revisão independente de segurança/LGPD, proteção de abuso na borda, pentest/carga e documentos jurídicos finais.
 
-Fila durável com lease de 120 s, exclusão mútua por organização, backoff, três tentativas, cancelamento e recuperação após abandono. Parser separado: heap V8 de 512 MB, prazo de 60 s, limite de entrada/saída, sem credenciais herdadas. O limite de 192 MB foi insuficiente para o PDF real e foi corrigido. Papel de worker dedicado sem leitura direta de tabelas nem service_role. Limite de armazenamento por plano (100 MiB inicial), até 20 versões. Bytes e conteúdo histórico privado protegidos pela ACL atual. Não é isolamento de sistema operacional nem armazenamento de objetos ilimitado; veja DOCUMENT_PIPELINE.md.
+## Retomada exata
 
-## Evoluções seguintes desta sessão
-
-- Recuperação corrigida: chat usa search_agent_knowledge com o agente da conversa, em vez de busca geral da organização. Perguntas naturais passam por normalização lexical explícita. Avaliação real de PostgreSQL em corpus sintético: 12/12, antes 8/12; sem provedor externo.
-- Atualizações preservam IDs/vetores dos fragmentos inalterados na mesma posição/página; alterados/removidos são substituídos/excluídos. Dez asserções SQL específicas passaram. Ainda não há alinhamento de trechos deslocados nem geração de embeddings no worker.
-- Inteligência ganhou filtro de datas de São Paulo, CSV com o mesmo período e PDF privado real, com perguntas, fontes, lacunas e consumo observado. Mantém o limite e escopo do histórico privado; fontes/revisão refletem o estado atual.
-- Fundação, fila e etapas validadas preservadas em commits; sincronização autorizada com origin/main sem force push. A consulta de CI remoto recebeu HTTP 403; não afirmar que CI passou.
-
-OCR entregue; continuar limites de IA, avaliação ampliada, crawler e billing sem enfraquecer segurança.
-
-## OCR implementado nesta continuação
-
-OCR opcional em português integrado ao upload, tarefa e worker: PDF digitalizado/misto, PNG/JPEG e imagens referenciadas em DOCX; páginas físicas PDF e metadados de reconhecimento no snapshot. Modelo oficial com hash fixado, limites nativos e limpeza do grupo de processos/temporários. Sete testes reais de OCR e oito asserções SQL novas passaram; as sete jornadas E2E passaram juntas na aplicação compilada. Detalhes/limites em OCR.md. Próximo trabalho: limites financeiros antes de chamadas de IA, avaliação ampliada e continuação segura do crawler.
+1. Usar este checkout existente; preservar .local/runtime.env, .local/worker.env e o volume. npm run db:start; npm run env:local; npm run ocr:install se o cache não existir.
+2. Manter npm run worker e uma única instância npm run dev em processos próprios. npm run ready verifica serviços; não substitui E2E.
+3. Próximo trabalho independente: integrar o núcleo do crawler à fila durável, fontes/versionamento e agendamento; somente aplicar remoções após coleta completa do mesmo escopo. Nesta rede, testar contratos/banco e manter validação pública bloqueada honestamente.
+4. Billing: conectar checkout e recepção durável de notificações ao domínio sandbox após conferir documentação e configurar conta de teste por canal seguro. Não conceder plano real por pagamento sandbox.
+5. IA: npm run ai:check sem rede; npm run eval:rag é gratuito/documental. Modo --provider exige autorização explícita e configuração segura; ainda não foi executado.
+6. Commits preservam o histórico desde 21c2cd5 e são sincronizados com origin/main sem force push. Configuração reutilizável da nuvem foi atualizada para OCR/worker e limites de IA; não houve publicação de snapshot nem restauração em tarefa nova.

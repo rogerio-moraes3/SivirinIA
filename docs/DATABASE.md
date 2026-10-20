@@ -21,3 +21,5 @@ Scripts/db-test.mjs usa psql no PostgreSQL real e helpers SECURITY INVOKER de as
 Migrations 0091/010/011 adicionam schema privado, document_tasks, document_snapshots e document_inputs interno; plano inclui storage_limit_bytes. Fila diferente de ingestion_jobs (reserva legada de URL). Execução usa papel sivirinia_worker, sem permissões diretas em tabelas. RPCs privadas não são expostas pelo PostgREST. Conclusão é transacional e revalida ACL, versão esperada, quota e lease.
 
 Migrations 012/013/014: normalização de perguntas, funções de recuperação e índices incrementais. Comparação de vetores não depende do search_path; texto/página alterados invalidam o vetor antigo. Versões anteriores da migration foram preservadas e correções são incrementais, sem reset.
+
+Migrations 015/017: opt-in de OCR, propagação ao worker e reprocessamento explícito do original autorizado. Migration 016: billing_intents/billing_events com RLS de owner/admin e função interna de reconciliação sandbox; não altera plano comercial. Todas foram aplicadas incrementalmente e verificadas em inicialização limpa.

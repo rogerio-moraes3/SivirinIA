@@ -128,6 +128,13 @@ test("cadastro → organização → agente → documento → pergunta citada �
   await expect(
     page.getByRole("heading", { name: "Conhecimento começa aqui" }),
   ).toBeVisible();
+  await page.goto(base + "/billing");
+  await expect(
+    page.getByRole("heading", { name: "Homologação financeira (sandbox)" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Nenhuma intenção de pagamento de teste registrada."),
+  ).toBeVisible();
   await page.goto(base);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
@@ -524,6 +531,30 @@ test("OCR português: PDF de imagens passa pela fila, conserva páginas e origin
   await expect(
     page.getByRole("region", { name: "Conteúdo histórico" }),
   ).toContainText("segundo fator");
+  await page.goto(base + "/sources");
+  await page
+    .getByLabel("Arquivo", { exact: true })
+    .setInputFiles("tests/fixtures/mixed-ptbr.pdf");
+  await page
+    .getByRole("button", { name: "Importar documento", exact: true })
+    .click();
+  await page.getByRole("link", { name: "mixed-ptbr.pdf", exact: true }).click();
+  await page.getByText("Atualizar esta fonte", { exact: true }).click();
+  await page.getByLabel("Modo de atualização").selectOption("file");
+  await page
+    .getByLabel(
+      "Usar OCR em português nesta atualização (arquivo; até 5 páginas/imagens)",
+      { exact: true },
+    )
+    .check();
+  await page
+    .getByLabel("Novo arquivo", { exact: true })
+    .setInputFiles("tests/fixtures/mixed-ptbr.pdf");
+  await page.getByRole("button", { name: "Atualizar e reindexar" }).click();
+  await expect(page.getByText("Versão 2", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("Trecho 2 · página 2", { exact: false }),
+  ).toBeVisible();
   await page.goto(base + "/agents");
   await page.getByLabel("Nome", { exact: true }).fill("Especialista OCR");
   await page.getByRole("button", { name: "Criar agente", exact: true }).click();

@@ -23,3 +23,7 @@
 
 - Relatórios PDF são arquivos reais gerados localmente com pdf-lib, com escopo/limites e custos desconhecidos explícitos. Filtros temporais usam dias de São Paulo a partir de 2020 (sem horário de verão nesse intervalo).
 - Avaliação padrão sempre desliga IA no próprio processo; modo externo exige flags de autorização e configuração segura, não foi executado. O corpus é sintético e não comprova precisão em bases reais.
+
+- OCR é opt-in por tarefa, local com Tesseract por/Poppler, modelo oficial com hash fixado e limites nativos. Reprocessar com OCR pode reutilizar o original de fonte autorizada; importações comuns mantêm deduplicação.
+- Crawler incompleto nunca indica remoções nem substitui a referência completa. Não contornar DNS por proxy sem preservar validação/fixação de IP.
+- Billing desta fase é estritamente sandbox: preço capturado no servidor, eventos idempotentes, sem concessão de plano real. Contratos de assinatura/PSP exigem homologação externa antes de conectar fluxos.

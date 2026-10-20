@@ -13,3 +13,5 @@ OpenAI: embeddings dimension=1536 e chat completions. Não há modelo default pa
 Anthropic; Google Drive/Docs; Notion; SharePoint/OneDrive; Confluence; GitHub; Zendesk; Movidesk; Omie; Bling; Conta Azul; RD Station; Tiny; Hotmart; Kiwify; WhatsApp Business; MCP; CRM/ERP e webhooks de ações.
 
 Para cada conector: implementar OAuth/escopos oficiais, credencial protegida, importação incremental, remoção/revogação, paginação, backoff, logs e teste real com uma conta autorizada. Não pedir todos os segredos de uma vez nem listar um conector como pronto por possuir um formulário.
+
+OCR local em português foi implementado (OCR.md). Mercado Pago possui somente contratos de assinatura/leitura sandbox e ledger interno preparados; nenhuma homologação, criação de cobrança ou recorrência conectada. Crawler de site/sitemap tem núcleo/CLI, sem integração agendada; validação pública continua bloqueada pela rede.

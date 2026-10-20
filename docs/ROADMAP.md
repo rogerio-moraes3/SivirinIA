@@ -16,3 +16,5 @@ Cada módulo exige validação funcional e de isolamento antes de ser anunciado.
 Concluído nesta etapa: fila durável e parser separado, originais privados, snapshots integrais para novos arquivos/textos e download com ACL. Embeddings no worker e sincronização agendada ainda pendentes. OCR opcional em português implementado conforme OCR.md.
 
 Também implementados: avaliação documental sintética em português, correção do escopo do agente, manutenção incremental por posição/página e relatórios PDF/CSV por período. Continuam pendentes avaliação de LLM real, OCR, semântica avançada e billing operacional.
+
+Continuação atual: OCR em português e reprocessamento entregues; avaliação documental ampliada, orçamentos pré-chamada e heurística de divergências. Crawler BFS/sitemap/diff implementado no núcleo/CLI; integração à fila/painel/agendador pendente. Ledger sandbox e contratos Mercado Pago preparados; checkout/recorrência/webhook receptor continuam pendentes.

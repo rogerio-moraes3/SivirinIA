@@ -4,10 +4,10 @@
 
 - ESLint: passou, sem erros ou avisos.
 - TypeScript e geração de tipos de rotas: passaram.
-- Vitest: **79 testes passaram em 10 arquivos**.
-- PostgreSQL real: **136 asserções passaram** — 53 de isolamento/permissões/cotas/convites/citações/exclusão; 23 de publicação restrita/revogação e 50 da fila/recuperação lexical, originais, snapshots, ACL, leases, cancelamento e limites; 10 da manutenção incremental de fragmentos.
+- Vitest: **107 testes passaram em 14 arquivos**.
+- PostgreSQL real: **168 asserções passaram** — 53 de isolamento/permissões, 23 de publicação, 50 da fila/recuperação, 10 de índices incrementais, 11 de OCR/reprocessamento, 4 de busca híbrida e 17 de billing sandbox.
 - Build de produção Next.js: passou.
-- Playwright/Chromium na aplicação compilada: **6 jornadas aprovadas**: cinco na execução geral e a sexta em reexecução focada após corrigir seletores ambíguos. Nenhum teste foi marcado como ignorado.
+- Playwright/Chromium na aplicação compilada: **7 jornadas passaram juntas**, sem testes ignorados; agora inclui OCR e reprocessamento do original. A regressão específica de PDF/URL foi repetida após adicionar prazos de DNS/HTTPS.
 - Auditoria das dependências de produção: **0 vulnerabilidades reportadas**.
 
 ## Jornadas de navegador executadas
@@ -66,3 +66,11 @@ A suíte de navegador foi ampliada para validar escopo do agente privado, rejei�
 ## OCR em português
 
 Sete testes OCR com ferramentas/modelo reais passaram (PDF digitalizado, PDF misto, PNG, DOCX com imagem, limites e limpeza). Oito novas asserções SQL: opt-in, autorização, metadados e falhas. As sete jornadas E2E passaram juntas, incluindo upload digitalizado via fila, download idêntico ao PDF original e pergunta citada na página reconhecida. Lint, TypeScript e build passaram. Modelo oficial baixado/verificado; nenhuma chamada a OCR externo.
+
+## Últimas extensões
+
+Avaliação documental ampliada: 20/20 casos sintéticos, incluindo tabela de alçadas, retenção/exclusão de dados, perguntas ausentes e duas fontes com prazos divergentes. Não mede precisão semântica de modelo externo. Tarifas ausentes, excesso de tokens/custo e fontes divergentes bloqueiam chamadas conforme os contratos testados; nenhuma chamada paga executada.
+
+Crawler: contratos de BFS/sitemap, XML/DTD/XXE, origem/redirecionamento, limites, diferença de versões e DNS que não responde. Transporte simulado somente nos testes. CLI público real falhou com zero páginas, sem substituir sucesso anterior nem autorizar exclusão. Não houve importação positiva pública.
+
+Billing: ledger em PostgreSQL real com RLS, preço do catálogo, idempotência, rejeição de valor incompatível, regressões de eventos e não ativação de plano por sandbox. Três testes locais de assinatura/adaptador; não são homologação Mercado Pago. Sem checkout/receptor de webhook conectado.

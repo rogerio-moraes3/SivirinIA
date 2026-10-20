@@ -6,7 +6,7 @@ export default async function Billing({
   params: Promise<{ org: string }>;
 }) {
   const { org } = await params;
-  const { db, organization } = await requireOrg(org);
+  const { db, organization, member } = await requireOrg(org);
   const [{ data: usage }, { data: sources }, { count: agents }] =
     await Promise.all([
       db
@@ -24,6 +24,29 @@ export default async function Billing({
         .select("*", { head: true, count: "exact" })
         .eq("organization_id", org),
     ]);
+  const canReadBilling = ["owner", "admin"].includes(member.role);
+  const { data: intents, error: billingError } = canReadBilling
+    ? await db
+        .from("billing_intents")
+        .select("id,amount_cents,status,created_at")
+        .eq("organization_id", org)
+        .order("created_at", { ascending: false })
+        .limit(20)
+    : { data: null, error: null };
+  if (billingError)
+    throw new Error(
+      "Não foi possível carregar o histórico financeiro de teste.",
+    );
+  const billingLabels: Record<string, string> = {
+    created: "Intenção criada; cobrança não iniciada",
+    pending: "Pendente",
+    in_process: "Em processamento",
+    approved: "Aprovado em sandbox",
+    rejected: "Rejeitado",
+    cancelled: "Cancelado",
+    refunded: "Reembolsado em sandbox",
+    charged_back: "Contestação em sandbox",
+  };
   const plan = organization.plans;
   return (
     <>
@@ -65,6 +88,43 @@ export default async function Billing({
           última página com texto.
         </p>
       </section>
+      {canReadBilling && (
+        <section className="card">
+          <h2>Homologação financeira (sandbox)</h2>
+          <p>
+            Registros de teste separados de cobranças reais. Aprovação sandbox
+            não altera seu plano comercial. Checkout e assinaturas recorrentes
+            ainda não estão conectados.
+          </p>
+          {intents?.length ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Referência</th>
+                  <th>Valor de teste</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {intents.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.id.slice(0, 8)}</td>
+                    <td>
+                      {(item.amount_cents / 100).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                    <td>{billingLabels[item.status]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>Nenhuma intenção de pagamento de teste registrada.</p>
+          )}
+        </section>
+      )}
       <div className="notice">
         <strong>Sem cobrança ativa</strong>
         <p>
